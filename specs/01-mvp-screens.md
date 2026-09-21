@@ -1,6 +1,6 @@
 # 01 — MVP Screens
 
-**State:** Approved
+**State:** Implemented
 **Depends on:** none
 **Date:** 2026-09-21
 
@@ -61,19 +61,19 @@ New files under `lib/`:
 
 ## Acceptance criteria
 
-- [ ] Visiting `/` shows the Library screen: hero, search box, category chips, and a grid of 8 game cards using the existing neon/CRT design system.
-- [ ] Typing in the search box filters cards by title; selecting a category chip filters by category; combining both narrows correctly; no matches shows the "no results" empty state.
-- [ ] Clicking a game card (or its Play button) navigates to `/game/[id]` for that game.
-- [ ] `/game/[id]` shows the game's cover, tags, description, stats strip, and a 10-row seeded leaderboard; "Play Now" routes to `/player/[id]`; "Back to Vault" routes to `/`.
-- [ ] `/player/[id]` shows a HUD (player name, score, lives, level) and a CRT-framed arena; score increases automatically over time and level increases at score thresholds, matching the template's pacing.
-- [ ] Pause toggles the simulation and shows an "on pause" overlay; End opens the game-over modal with the final score.
-- [ ] Saving initials (pre-filled with "GUEST") in the game-over modal appends an entry to `localStorage`'s `av_scores` array and shows the "score saved" confirmation; Play Again resets the HUD to its initial state; Back to Vault routes to `/`.
-- [ ] `/hall-of-fame` shows a game-selector tab row, a top-3 podium, and a full ranked table for the selected game.
-- [ ] The Nav (desktop links + mobile hamburger panel) is present on all 4 routes, highlights the active section, has no sign-in affordance, and the mobile panel opens/closes correctly.
-- [ ] There is no `/auth` route and no session state anywhere in the app.
-- [ ] All screens are usable at desktop and mobile widths using the existing breakpoints (840px nav, 900px detail, 720px table/hall).
-- [ ] All UI copy is in English.
-- [ ] `npm run build` completes with no type errors.
+- [x] Visiting `/` shows the Library screen: hero, search box, category chips, and a grid of 8 game cards using the existing neon/CRT design system.
+- [x] Typing in the search box filters cards by title; selecting a category chip filters by category; combining both narrows correctly; no matches shows the "no results" empty state.
+- [x] Clicking a game card (or its Play button) navigates to `/game/[id]` for that game.
+- [x] `/game/[id]` shows the game's cover, tags, description, stats strip, and a 10-row seeded leaderboard; "Play Now" routes to `/player/[id]`; "Back to Vault" routes to `/`.
+- [x] `/player/[id]` shows a HUD (player name, score, lives, level) and a CRT-framed arena; score increases automatically over time and level increases at score thresholds, matching the template's pacing.
+- [x] Pause toggles the simulation and shows an "on pause" overlay; End opens the game-over modal with the final score.
+- [x] Saving initials (pre-filled with "GUEST") in the game-over modal appends an entry to `localStorage`'s `av_scores` array and shows the "score saved" confirmation; Play Again resets the HUD to its initial state; Back to Vault routes to `/`.
+- [x] `/hall-of-fame` shows a game-selector tab row, a top-3 podium, and a full ranked table for the selected game.
+- [x] The Nav (desktop links + mobile hamburger panel) is present on all 4 routes, highlights the active section, has no sign-in affordance, and the mobile panel opens/closes correctly.
+- [x] There is no `/auth` route and no session state anywhere in the app.
+- [x] All screens are usable at desktop and mobile widths using the existing breakpoints (840px nav, 900px detail, 720px table/hall).
+- [x] All UI copy is in English.
+- [x] `npm run build` completes with no type errors.
 
 ## Decisions taken and discarded
 
