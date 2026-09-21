@@ -8,7 +8,8 @@ export default function Nav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  const isLibraryActive = pathname === "/" || pathname.startsWith("/game/") || pathname.startsWith("/player/");
+  const isHomeActive = pathname === "/";
+  const isGamesActive = pathname === "/games" || pathname.startsWith("/game/") || pathname.startsWith("/player/");
   const isHallActive = pathname === "/hall-of-fame";
 
   const close = () => setOpen(false);
@@ -23,8 +24,11 @@ export default function Nav() {
           </div>
         </Link>
         <div className="links">
-          <Link href="/" className={isLibraryActive ? "active" : ""}>
-            Library
+          <Link href="/" className={isHomeActive ? "active" : ""}>
+            Home
+          </Link>
+          <Link href="/games" className={isGamesActive ? "active" : ""}>
+            Games
           </Link>
           <Link href="/hall-of-fame" className={isHallActive ? "active" : ""}>
             Hall of Fame
@@ -45,8 +49,11 @@ export default function Nav() {
         <div className="pixel neon-cyan" style={{ fontSize: 11, marginBottom: 16 }}>
           MENU
         </div>
-        <Link href="/" className={isLibraryActive ? "active" : ""} onClick={close}>
-          Library
+        <Link href="/" className={isHomeActive ? "active" : ""} onClick={close}>
+          Home
+        </Link>
+        <Link href="/games" className={isGamesActive ? "active" : ""} onClick={close}>
+          Games
         </Link>
         <Link href="/hall-of-fame" className={isHallActive ? "active" : ""} onClick={close}>
           Hall of Fame

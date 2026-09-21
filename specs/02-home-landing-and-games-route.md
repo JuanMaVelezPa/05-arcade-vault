@@ -1,6 +1,6 @@
 # 02 — Home Landing Page & Games Route
 
-**State:** Approved
+**State:** Implemented
 **Depends on:** 01-mvp-screens
 **Date:** 2026-09-21
 
@@ -41,16 +41,16 @@ No new persisted data structures. The Home page's "recent scores" ticker and "to
 
 ## Acceptance criteria
 
-- [ ] Visiting `/` shows the new Home landing page (hero, "why us" feature grid, 6-game preview rail, stats block, activity section, pricing/FAQ, final CTA) instead of the game grid.
-- [ ] Visiting `/games` shows the search box, category chips, and full game grid — identical behavior to what `/` had before this spec (search filters by title, chip filters by category, "no results" empty state works).
-- [ ] The Home hero's primary CTA and the "See all games" / final CTA buttons navigate to `/games`; the pricing section's CTA also navigates to `/games` (not `/auth`).
-- [ ] The 6 preview cards on the Home page navigate to `/game/[id]` for their respective game.
-- [ ] The Nav shows "Home" (→ `/`, active only on exact `/`) and "Games" (→ `/games`, active on `/games`, `/game/[id]`, `/player/[id]`) in both desktop and mobile layouts; "Hall of Fame" still works as before.
-- [ ] Scrolling the Home page triggers the reveal-in animation on each `.reveal` section.
-- [ ] All Home-page copy is in English.
-- [ ] There is no `/about` route and no About/Sign-In links in the Nav.
-- [ ] The Home page is usable at desktop and mobile widths without horizontal overflow.
-- [ ] `npm run build` completes with no type errors.
+- [x] Visiting `/` shows the new Home landing page (hero, "why us" feature grid, 6-game preview rail, stats block, activity section, pricing/FAQ, final CTA) instead of the game grid.
+- [x] Visiting `/games` shows the search box, category chips, and full game grid — identical behavior to what `/` had before this spec (search filters by title, chip filters by category, "no results" empty state works).
+- [x] The Home hero's primary CTA and the "See all games" / final CTA buttons navigate to `/games`; the pricing section's CTA also navigates to `/games` (not `/auth`).
+- [x] The 6 preview cards on the Home page navigate to `/game/[id]` for their respective game.
+- [x] The Nav shows "Home" (→ `/`, active only on exact `/`) and "Games" (→ `/games`, active on `/games`, `/game/[id]`, `/player/[id]`) in both desktop and mobile layouts; "Hall of Fame" still works as before.
+- [x] Scrolling the Home page triggers the reveal-in animation on each `.reveal` section.
+- [x] All Home-page copy is in English.
+- [x] There is no `/about` route and no About/Sign-In links in the Nav.
+- [x] The Home page is usable at desktop and mobile widths without horizontal overflow.
+- [x] `npm run build` completes with no type errors.
 
 ## Decisions taken and discarded
 
