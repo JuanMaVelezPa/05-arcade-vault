@@ -1,6 +1,6 @@
 # 03 — About Page & Contact Email
 
-**State:** Approved
+**State:** Implemented
 **Depends on:** 02-home-landing-and-games-route
 **Date:** 2026-09-21
 
@@ -57,19 +57,19 @@ No new persisted data structures (nothing saved to `localStorage` or a database)
 
 ## Acceptance criteria
 
-- [ ] Visiting `/about` shows the hero (mission statement + 3 highlights), the pixel divider, and the contact section (intro + tips + form).
-- [ ] Submitting the form with valid, non-empty fields and a well-formed email sends a real email via Resend to `juanmavelezpa1@gmail.com` (from the sandbox sender, with `reply_to` set to the submitter's email) and shows the terminal-success block with the submitter's name.
-- [ ] Submitting with any field empty triggers the shake animation and does not call the API, matching the template's existing behavior.
-- [ ] Submitting with a non-empty but malformed email triggers the shake animation and does not call the API.
-- [ ] While the request is in flight, the submit button shows a loading/disabled state.
-- [ ] If the API call fails (bad/missing `RESEND_API_KEY`, network error, or Resend error response), a terminal-style error state appears instead of success, and its "try again" action returns to the form with the previously typed name/email/message still filled in.
-- [ ] `app/api/contact/route.ts` rejects requests with empty fields or a malformed email with a `400` response, independent of the client-side checks.
-- [ ] The Nav shows "About" (→ `/about`, active only on `/about`) in both desktop and mobile layouts; no Sign In link is present anywhere.
-- [ ] All About-page copy (including the new error state) is in English.
-- [ ] The About page is usable at desktop and mobile widths without horizontal overflow.
-- [ ] `RESEND_API_KEY` is read only in server-side code (the API route), never exposed to the client bundle.
-- [ ] `.env.example` exists documenting `RESEND_API_KEY`; no real API key is committed anywhere in the repo.
-- [ ] `npm run build` completes with no type errors.
+- [x] Visiting `/about` shows the hero (mission statement + 3 highlights), the pixel divider, and the contact section (intro + tips + form).
+- [x] Submitting the form with valid, non-empty fields and a well-formed email sends a real email via Resend to `juanmavelezpa1@gmail.com` (from the sandbox sender, with `reply_to` set to the submitter's email) and shows the terminal-success block with the submitter's name.
+- [x] Submitting with any field empty triggers the shake animation and does not call the API, matching the template's existing behavior.
+- [x] Submitting with a non-empty but malformed email triggers the shake animation and does not call the API.
+- [x] While the request is in flight, the submit button shows a loading/disabled state.
+- [x] If the API call fails (bad/missing `RESEND_API_KEY`, network error, or Resend error response), a terminal-style error state appears instead of success, and its "try again" action returns to the form with the previously typed name/email/message still filled in.
+- [x] `app/api/contact/route.ts` rejects requests with empty fields or a malformed email with a `400` response, independent of the client-side checks.
+- [x] The Nav shows "About" (→ `/about`, active only on `/about`) in both desktop and mobile layouts; no Sign In link is present anywhere.
+- [x] All About-page copy (including the new error state) is in English.
+- [x] The About page is usable at desktop and mobile widths without horizontal overflow.
+- [x] `RESEND_API_KEY` is read only in server-side code (the API route), never exposed to the client bundle.
+- [x] `.env.example` exists documenting `RESEND_API_KEY`; no real API key is committed anywhere in the repo.
+- [x] `npm run build` completes with no type errors.
 
 ## Decisions taken and discarded
 
