@@ -11,6 +11,7 @@ export default function Nav() {
   const isHomeActive = pathname === "/";
   const isGamesActive = pathname === "/games" || pathname.startsWith("/game/") || pathname.startsWith("/player/");
   const isHallActive = pathname === "/hall-of-fame";
+  const isAboutActive = pathname === "/about";
 
   const close = () => setOpen(false);
 
@@ -32,6 +33,9 @@ export default function Nav() {
           </Link>
           <Link href="/hall-of-fame" className={isHallActive ? "active" : ""}>
             Hall of Fame
+          </Link>
+          <Link href="/about" className={isAboutActive ? "active" : ""}>
+            About
           </Link>
         </div>
         <div className="spacer"></div>
@@ -57,6 +61,9 @@ export default function Nav() {
         </Link>
         <Link href="/hall-of-fame" className={isHallActive ? "active" : ""} onClick={close}>
           Hall of Fame
+        </Link>
+        <Link href="/about" className={isAboutActive ? "active" : ""} onClick={close}>
+          About
         </Link>
         <div style={{ flex: 1 }}></div>
         <div className="pixel" style={{ fontSize: 9, color: "var(--ink-faint)", letterSpacing: "0.16em" }}>
