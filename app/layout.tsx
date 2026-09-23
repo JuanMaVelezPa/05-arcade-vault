@@ -1,25 +1,51 @@
 import type { Metadata } from "next";
-import { Courier_Prime, JetBrains_Mono, Press_Start_2P } from "next/font/google";
+import localFont from "next/font/local";
 import Nav from "@/components/Nav";
 import "./globals.css";
 
-const pressStart = Press_Start_2P({
+// Self-hosted from public/fonts (no network access needed at build time).
+const pressStart = localFont({
+  src: "../public/fonts/Press_Start_2P/PressStart2P-Regular.ttf",
   weight: "400",
-  subsets: ["latin"],
   variable: "--font-press-start",
   display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
-  weight: ["400", "500", "700"],
-  subsets: ["latin"],
+const jetbrainsMono = localFont({
+  src: [
+    {
+      path: "../public/fonts/JetBrains_Mono/static/JetBrainsMono-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/JetBrains_Mono/static/JetBrainsMono-Medium.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/JetBrains_Mono/static/JetBrainsMono-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
   variable: "--font-jetbrains",
   display: "swap",
 });
 
-const courierPrime = Courier_Prime({
-  weight: ["400", "700"],
-  subsets: ["latin"],
+const courierPrime = localFont({
+  src: [
+    {
+      path: "../public/fonts/Courier_Prime/CourierPrime-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/Courier_Prime/CourierPrime-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
   variable: "--font-courier",
   display: "swap",
 });
