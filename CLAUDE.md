@@ -28,6 +28,7 @@ Use always /frontend-design to make user interfaces
 - **App Router**: everything lives under `app/`. `app/layout.tsx` is the root layout (Geist Sans/Mono via `next/font/google`, wraps `<body>` in a flex column). `app/globals.css` defines Tailwind v4 theme tokens (`--background`, `--foreground`) via `@theme inline` and a `prefers-color-scheme: dark` override — there is no separate `tailwind.config`, theme customization happens in this CSS file.
 - **Path alias**: `@/*` maps to the project root (`tsconfig.json`).
 - **Styling**: Tailwind CSS v4 via `@tailwindcss/postcss` (see `postcss.config.mjs`); no CSS-in-JS.
+- **Formatting/linting**: Prettier (defaults, `.prettierrc.json`) + ESLint (`eslint-config-prettier` appended last in `eslint.config.mjs`). A project `PostToolUse` hook on `Write` (`.claude/settings.json` → `.claude/hooks/format-and-lint.mjs`) runs Prettier on every file Claude creates and `eslint --fix` on JS/TS; remaining ESLint errors are fed back (exit 2) and must be fixed. Manual: `npm run format`, `npm run format:check`, `npm run lint`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
