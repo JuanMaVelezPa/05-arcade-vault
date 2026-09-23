@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import AsteroidsCanvas, { type AsteroidsHandle } from "@/components/games/AsteroidsCanvas";
+import type { AsteroidsHud } from "@/lib/games/asteroids/engine";
 import { saveScore } from "@/lib/scores";
 import type { Game } from "@/lib/types";
 
@@ -12,6 +14,11 @@ interface GamePlayerProps {
 
 export default function GamePlayer({ game }: GamePlayerProps) {
   const router = useRouter();
+  // The only real game so far; every other id keeps the simulated arena.
+  const isAsteroids = game.id === "rocas";
+  const asteroidsRef = useRef<AsteroidsHandle>(null);
+  // Simulated games: running score, so the interval can bump the level without an effect on `score`.
+  const simScoreRef = useRef(0);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [level, setLevel] = useState(1);
@@ -19,25 +26,50 @@ export default function GamePlayer({ game }: GamePlayerProps) {
   const [over, setOver] = useState(false);
   const [name, setName] = useState("GUEST");
   const [saved, setSaved] = useState(false);
+  const [tripleShot, setTripleShot] = useState(0);
 
   useEffect(() => {
-    if (over || paused) return;
-    const t = setInterval(() => setScore((s) => s + Math.floor(10 + Math.random() * 90)), 220);
+    if (isAsteroids || over || paused) return;
+    const t = setInterval(() => {
+      const next = simScoreRef.current + Math.floor(10 + Math.random() * 90);
+      simScoreRef.current = next;
+      setScore(next);
+      if (next % 2500 < 100) setLevel((l) => l + 1);
+    }, 220);
     return () => clearInterval(t);
-  }, [over, paused]);
+  }, [isAsteroids, over, paused]);
 
-  useEffect(() => {
-    if (score > 0 && score % 2500 < 100) setLevel((l) => l + 1);
-  }, [score]);
+  // Asteroids: the engine owns pause and game over; React mirrors it via callbacks.
+  const handleHud = (hud: AsteroidsHud) => {
+    setScore(hud.score);
+    setLives(hud.lives);
+    setLevel(hud.level);
+    setTripleShot(hud.tripleShot);
+  };
+  const handleGameOver = (finalScore: number) => {
+    setScore(finalScore);
+    setOver(true);
+  };
 
-  const endGame = () => setOver(true);
+  const togglePause = () => {
+    if (!isAsteroids) return setPaused((p) => !p);
+    if (paused) asteroidsRef.current?.resume();
+    else asteroidsRef.current?.pause();
+  };
+  const endGame = () => {
+    if (isAsteroids) asteroidsRef.current?.end();
+    else setOver(true);
+  };
   const restart = () => {
+    simScoreRef.current = 0;
     setScore(0);
     setLives(3);
     setLevel(1);
     setPaused(false);
     setOver(false);
     setSaved(false);
+    setTripleShot(0);
+    if (isAsteroids) asteroidsRef.current?.restart();
   };
 
   return (
@@ -62,9 +94,15 @@ export default function GamePlayer({ game }: GamePlayerProps) {
             <div className="l">Level</div>
             <div className="v">{String(level).padStart(2, "0")}</div>
           </div>
+          {isAsteroids && tripleShot > 0 && (
+            <div className="hud-stat">
+              <div className="l">3X</div>
+              <div className="v">{tripleShot.toFixed(1)}s</div>
+            </div>
+          )}
         </div>
         <div className="hud-actions">
-          <button type="button" className="btn yellow" onClick={() => setPaused((p) => !p)}>
+          <button type="button" className="btn yellow" onClick={togglePause}>
             {paused ? "RESUME" : "PAUSE"}
           </button>
           <button type="button" className="btn magenta" onClick={endGame}>
@@ -78,13 +116,22 @@ export default function GamePlayer({ game }: GamePlayerProps) {
 
       <div className="crt">
         <div className="crt-screen">
-          <div className="game-arena">
-            <div className="grid-floor"></div>
-            <div className="enemy e1"></div>
-            <div className="enemy e2"></div>
-            <div className="enemy e3"></div>
-            <div className="player-ship"></div>
-          </div>
+          {isAsteroids ? (
+            <AsteroidsCanvas
+              ref={asteroidsRef}
+              onHud={handleHud}
+              onGameOver={handleGameOver}
+              onPauseChange={setPaused}
+            />
+          ) : (
+            <div className="game-arena">
+              <div className="grid-floor"></div>
+              <div className="enemy e1"></div>
+              <div className="enemy e2"></div>
+              <div className="enemy e3"></div>
+              <div className="player-ship"></div>
+            </div>
+          )}
           {paused && (
             <div className="crt-content" style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}>
               <div>
@@ -92,7 +139,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
                   PAUSED
                 </div>
                 <div className="mono" style={{ fontSize: 11, color: "var(--ink-dim)", marginTop: 10, letterSpacing: "0.16em" }}>
-                  PRESS RESUME TO CONTINUE
+                  {isAsteroids ? "PRESS P OR RESUME TO CONTINUE" : "PRESS RESUME TO CONTINUE"}
                 </div>
               </div>
             </div>

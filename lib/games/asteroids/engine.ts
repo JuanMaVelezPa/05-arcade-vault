@@ -38,6 +38,15 @@ const RADII = [0, 16, 30, 50]; // by size 1, 2, 3
 const SPEEDS = [0, 85, 55, 32]; // base speed by size
 const POINTS = [0, 100, 50, 20]; // points by size
 
+// Neon palette — values mirror the tokens in app/globals.css.
+const CYAN = "#00f5ff";
+const MAGENTA = "#ff006e";
+const YELLOW = "#f5ff00";
+const WHITE = "#ffffff";
+const FLAME = "rgba(255, 140, 0, 0.9)";
+const FLAME_GLOW = "#ff8c00";
+const ASTEROID_COLORS = ["", MAGENTA, YELLOW, MAGENTA]; // by size 1, 2, 3
+
 const START_LIVES = 3;
 const RESPAWN_DELAY = 2;
 const MAX_DT = 0.05;
@@ -58,6 +67,12 @@ const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
 const randInt = (min: number, max: number) => Math.floor(rand(min, max + 1));
 
+// Stroke/fill glow via canvas shadow; callers wrap in save()/restore().
+function glow(ctx: CanvasRenderingContext2D, color: string, blur: number) {
+  ctx.shadowColor = color;
+  ctx.shadowBlur = blur;
+}
+
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   return (
@@ -75,6 +90,18 @@ export function createAsteroids(
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Asteroids: 2D canvas context not available");
   const ctx: CanvasRenderingContext2D = context;
+
+  // Same dark radial background as .game-arena in app/globals.css.
+  const background = ctx.createRadialGradient(
+    W / 2,
+    H / 2,
+    0,
+    W / 2,
+    H / 2,
+    Math.hypot(W / 2, H / 2) * 0.7,
+  );
+  background.addColorStop(0, "#0a0030");
+  background.addColorStop(1, "#000");
 
   // ── Input ───────────────────────────────────────────────────────────────────
   const keys: Record<string, boolean> = {};
@@ -117,10 +144,13 @@ export function createAsteroids(
     }
 
     draw(ctx: CanvasRenderingContext2D) {
-      ctx.fillStyle = "#fff";
+      ctx.save();
+      glow(ctx, CYAN, 10);
+      ctx.fillStyle = WHITE;
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     }
   }
 
@@ -130,6 +160,7 @@ export function createAsteroids(
     y: number;
     size: number;
     radius: number;
+    color: string;
     vx: number;
     vy: number;
     rot: number;
@@ -142,6 +173,7 @@ export function createAsteroids(
       this.y = y;
       this.size = size;
       this.radius = RADII[size];
+      this.color = ASTEROID_COLORS[size];
 
       const angle = rand(0, Math.PI * 2);
       const speed = SPEEDS[size] + rand(-15, 15);
@@ -177,7 +209,8 @@ export function createAsteroids(
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.rot);
-      ctx.strokeStyle = "#fff";
+      glow(ctx, this.color, 10);
+      ctx.strokeStyle = this.color;
       ctx.lineWidth = 1.5;
       ctx.lineJoin = "round";
       ctx.beginPath();
@@ -220,18 +253,22 @@ export function createAsteroids(
       if (this.ttl < 2 && Math.floor(this.ttl * 8) % 2 === 0) return;
       const pulse = 0.85 + Math.sin(performance.now() / 150) * 0.15;
       ctx.save();
+      glow(ctx, CYAN, 14);
       ctx.translate(this.x, this.y);
       ctx.rotate(Math.PI / 4);
-      ctx.strokeStyle = "#0ff";
+      ctx.strokeStyle = CYAN;
       ctx.lineWidth = 2;
       const r = this.radius * pulse;
       ctx.strokeRect(-r, -r, r * 2, r * 2);
       ctx.restore();
-      ctx.fillStyle = "#0ff";
+      ctx.save();
+      glow(ctx, CYAN, 8);
+      ctx.fillStyle = CYAN;
       ctx.font = "bold 12px monospace";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("3x", this.x, this.y);
+      ctx.restore();
     }
   }
 
@@ -312,7 +349,8 @@ export function createAsteroids(
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.angle);
-      ctx.strokeStyle = "#fff";
+      glow(ctx, CYAN, 12);
+      ctx.strokeStyle = CYAN;
       ctx.lineWidth = 1.5;
       ctx.lineJoin = "round";
 
@@ -331,7 +369,8 @@ export function createAsteroids(
         ctx.moveTo(-8, -4);
         ctx.lineTo(-8 - rand(6, 14), 0);
         ctx.lineTo(-8, 4);
-        ctx.strokeStyle = "rgba(255, 130, 0, 0.85)";
+        glow(ctx, FLAME_GLOW, 12);
+        ctx.strokeStyle = FLAME;
         ctx.stroke();
       }
 
@@ -347,11 +386,13 @@ export function createAsteroids(
     vy: number;
     life: number;
     ttl: number;
+    color: string;
     dead = false;
 
-    constructor(x: number, y: number) {
+    constructor(x: number, y: number, color: string) {
       this.x = x;
       this.y = y;
+      this.color = color;
       const angle = rand(0, Math.PI * 2);
       const speed = rand(30, 130);
       this.vx = Math.cos(angle) * speed;
@@ -368,13 +409,16 @@ export function createAsteroids(
     }
 
     draw(ctx: CanvasRenderingContext2D) {
-      const alpha = this.ttl / this.life;
-      ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(2)})`;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, this.ttl / this.life);
+      glow(ctx, this.color, 6);
+      ctx.strokeStyle = this.color;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(this.x, this.y);
       ctx.lineTo(this.x - this.vx * 0.05, this.y - this.vy * 0.05);
       ctx.stroke();
+      ctx.restore();
     }
   }
 
@@ -437,8 +481,8 @@ export function createAsteroids(
     spawnAsteroids(3 + level);
   }
 
-  function explode(x: number, y: number, count = 8) {
-    for (let i = 0; i < count; i++) particles.push(new Particle(x, y));
+  function explode(x: number, y: number, color: string, count = 8) {
+    for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color));
   }
 
   function gameOver() {
@@ -449,7 +493,7 @@ export function createAsteroids(
   }
 
   function killShip() {
-    explode(ship.x, ship.y, 14);
+    explode(ship.x, ship.y, CYAN, 14);
     ship.dead = true;
     lives--;
     if (lives <= 0) {
@@ -514,7 +558,7 @@ export function createAsteroids(
           b.dead = true;
           a.dead = true;
           score += POINTS[a.size];
-          explode(a.x, a.y, a.size * 5);
+          explode(a.x, a.y, a.color, a.size * 5);
           newAsteroids.push(...a.split());
           if (!powerUpSpawned) {
             killsSinceSpawn++;
@@ -547,7 +591,7 @@ export function createAsteroids(
   // ── Draw ────────────────────────────────────────────────────────────────────
   // No HUD or overlay text: score, lives, level, and game over live in React.
   function draw() {
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = background;
     ctx.fillRect(0, 0, W, H);
 
     particles.forEach((p) => p.draw(ctx));

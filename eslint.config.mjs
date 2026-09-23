@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Static design/gameplay references, not app code.
+    "references/**",
   ]),
   // Disable stylistic rules that conflict with Prettier (keep last).
   prettier,
