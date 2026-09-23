@@ -91,26 +91,26 @@ New component: `components/games/AsteroidsCanvas.tsx` (client component). It ren
 
 ## Acceptance criteria
 
-- [ ] `/games` lists ASTEROIDS as a ninth game with its own `cover-asteroids` art, linking to `/game/asteroids`, which shows the new copy.
-- [ ] The ROCKS (`rocas`) entry, its cover, and the "ROCKS" home activity line are unchanged from `main`.
-- [ ] `/player/asteroids` renders an 800 × 600 logical canvas that fills the CRT screen at 4:3, with the scanline overlay still visible on top.
-- [ ] ↝/→ rotate, ↑ thrusts with a visible flame, and Space fires; the ship and asteroids wrap around the edges.
-- [ ] Shooting a large asteroid adds 20 points and splits it in two medium ones; medium adds 50 and splits into two small ones; small adds 100 and disappears.
-- [ ] Clearing all asteroids advances the level, and the new level spawns `3 + level` large asteroids.
-- [ ] A collision costs one life; the ship respawns after about 2 s at the center and blinks while invincible for 3 s.
-- [ ] The triple-shot power-up drops (guaranteed by the 5th kill of a level if not earlier), picking it up fires three bullets for 5 s, and the HUD shows a `3X` stat with the remaining seconds only while it is active.
-- [ ] The React HUD shows the live score, lives, and level; the canvas draws no HUD or overlay text.
-- [ ] PAUSE/RESUME and the P/Escape keys pause and resume the game, and the button label stays in sync with the keyboard.
-- [ ] Switching to another tab and back leaves the game paused.
-- [ ] Losing the last life, or pressing END, opens the GAME OVER modal with the real final score.
-- [ ] Typing initials in the modal does not move or fire the ship; SAVE SCORE adds an entry with `game: "asteroids"` and the final score to `localStorage` `av_scores`.
-- [ ] PLAY AGAIN starts a fresh run with score 0, 3 lives, and level 1.
-- [ ] Arrow keys and Space do not scroll the page while `/player/asteroids` is open.
-- [ ] Leaving `/player/asteroids` (EXIT, BACK TO VAULT, or Nav) stops the loop and removes the key listeners, with no console errors.
-- [ ] On a touch-only viewport, `/player/asteroids` shows "KEYBOARD REQUIRED" instead of starting the game.
-- [ ] The other eight games at `/player/[id]`, including `/player/rocas`, still show the simulated arena and behave as before.
-- [ ] Ship, asteroids, bullets, and power-up use the neon palette with glow, not plain white.
-- [ ] `npm run build` and `npm run lint` complete with no errors.
+- [x] `/games` lists ASTEROIDS as a ninth game with its own `cover-asteroids` art, linking to `/game/asteroids`, which shows the new copy.
+- [x] The ROCKS (`rocas`) entry, its cover, and the "ROCKS" home activity line are unchanged from `main`.
+- [x] `/player/asteroids` renders an 800 × 600 logical canvas that fills the CRT screen at 4:3, with the scanline overlay still visible on top.
+- [x] ↝/→ rotate, ↑ thrusts with a visible flame, and Space fires; the ship and asteroids wrap around the edges.
+- [x] Shooting a large asteroid adds 20 points and splits it in two medium ones; medium adds 50 and splits into two small ones; small adds 100 and disappears.
+- [x] Clearing all asteroids advances the level, and the new level spawns `3 + level` large asteroids.
+- [x] A collision costs one life; the ship respawns after about 2 s at the center and blinks while invincible for 3 s.
+- [x] The triple-shot power-up drops (guaranteed by the 5th kill of a level if not earlier), picking it up fires three bullets for 5 s, and the HUD shows a `3X` stat with the remaining seconds only while it is active.
+- [x] The React HUD shows the live score, lives, and level; the canvas draws no HUD or overlay text.
+- [x] PAUSE/RESUME and the P/Escape keys pause and resume the game, and the button label stays in sync with the keyboard.
+- [x] Switching to another tab and back leaves the game paused.
+- [x] Losing the last life, or pressing END, opens the GAME OVER modal with the real final score.
+- [x] Typing initials in the modal does not move or fire the ship; SAVE SCORE adds an entry with `game: "asteroids"` and the final score to `localStorage` `av_scores`.
+- [x] PLAY AGAIN starts a fresh run with score 0, 3 lives, and level 1.
+- [x] Arrow keys and Space do not scroll the page while `/player/asteroids` is open.
+- [x] Leaving `/player/asteroids` (EXIT, BACK TO VAULT, or Nav) stops the loop and removes the key listeners, with no console errors.
+- [x] On a touch-only viewport, `/player/asteroids` shows "KEYBOARD REQUIRED" instead of starting the game.
+- [x] The other eight games at `/player/[id]`, including `/player/rocas`, still show the simulated arena and behave as before.
+- [x] Ship, asteroids, bullets, and power-up use the neon palette with glow, not plain white.
+- [x] `npm run build` and `npm run lint` complete with no errors.
 
 ## Decisions taken and discarded
 
