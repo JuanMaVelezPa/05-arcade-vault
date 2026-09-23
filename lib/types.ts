@@ -17,6 +17,11 @@ export interface ScoreRow {
   date: string; // DD/MM/YYYY, UTC
 }
 
+export interface Champion {
+  game: Pick<Game, "id" | "title" | "color">;
+  champion: Omit<ScoreRow, "rank"> | null; // null when the game has no scores
+}
+
 export interface SavedScore {
   game: string;
   score: number;

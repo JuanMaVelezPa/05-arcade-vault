@@ -3,7 +3,7 @@ import "server-only";
 import { formatScoreDate } from "./format";
 import type { Database } from "./supabase/database.types";
 import { getSupabase } from "./supabase/server";
-import type { Game, ScoreRow } from "./types";
+import type { Champion, Game, ScoreRow } from "./types";
 
 type GameRow = Database["public"]["Tables"]["games"]["Row"];
 type StatsRow = Database["public"]["Views"]["game_stats"]["Row"];
@@ -70,4 +70,33 @@ export async function getTopScores(
     score: r.score,
     date: formatScoreDate(r.created_at),
   }));
+}
+
+// One entry per game in catalog order; each game's #1 is only ever compared within its own game
+export async function getChampions(): Promise<Champion[]> {
+  const supabase = await getSupabase();
+  const [games, champions] = await Promise.all([
+    supabase.from("games").select("id, title, color").order("sort_order"),
+    supabase.from("game_champions").select("*"),
+  ]);
+  if (games.error)
+    throw new Error(`games query failed: ${games.error.message}`);
+  if (champions.error)
+    throw new Error(`game_champions query failed: ${champions.error.message}`);
+
+  const byGame = new Map(champions.data.map((c) => [c.game_id, c]));
+  return games.data.map((game) => {
+    const c = byGame.get(game.id);
+    return {
+      game,
+      champion:
+        c?.player_name != null && c.score != null && c.created_at != null
+          ? {
+              name: c.player_name,
+              score: c.score,
+              date: formatScoreDate(c.created_at),
+            }
+          : null,
+    };
+  });
 }

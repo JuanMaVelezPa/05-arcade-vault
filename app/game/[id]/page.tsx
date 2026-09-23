@@ -1,15 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getGame } from "@/lib/catalog";
-import { seededScores } from "@/lib/data";
+import { getGame, getTopScores } from "@/lib/catalog";
 import { formatPlays } from "@/lib/format";
 
 export default async function GameDetailPage({ params }: PageProps<"/game/[id]">) {
   const { id } = await params;
-  const game = await getGame(id);
+  const [game, scores] = await Promise.all([getGame(id), getTopScores(id, 10)]);
   if (!game) notFound();
-
-  const scores = seededScores(id.length * 17 + 3, 10);
 
   return (
     <div className="av-detail fade-in">
@@ -58,8 +55,9 @@ export default async function GameDetailPage({ params }: PageProps<"/game/[id]">
       <aside>
         <div className="leaderboard">
           <h3>TOP SCORES</h3>
+          {scores.length === 0 && <div className="lb-empty pixel">NO SCORES YET — BE THE FIRST</div>}
           {scores.map((r, i) => (
-            <div key={r.name} className={"lb-row" + (i === 0 ? " top1" : i === 1 ? " top2" : i === 2 ? " top3" : "")}>
+            <div key={r.rank} className={"lb-row" + (i === 0 ? " top1" : i === 1 ? " top2" : i === 2 ? " top3" : "")}>
               <div className="rk">#{String(r.rank).padStart(2, "0")}</div>
               <div className="pl">
                 {r.name}

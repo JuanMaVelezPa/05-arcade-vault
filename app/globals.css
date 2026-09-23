@@ -1407,3 +1407,17 @@ a { color: inherit; text-decoration: none; }
   .vo-static, .vault-offline .flicker { animation: none; }
 }
 .vo-actions .btn:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
+
+/* ===== real leaderboards (spec 06): empty boards + ALL GAMES champions table ===== */
+.lb-empty {
+  padding: 28px 16px; text-align: center; font-size: 10px; line-height: 1.8;
+  color: var(--magenta); letter-spacing: 0.12em; text-shadow: 0 0 6px rgba(255, 0, 110, 0.45);
+}
+.hall-table.champions .th, .hall-table.champions .tr { grid-template-columns: minmax(0, 1.4fr) 1fr 1fr 140px; }
+.hall-table.champions .gm a { font-family: var(--pixel); font-size: 10px; letter-spacing: 0.08em; text-decoration: none; }
+.hall-table.champions .gm a:hover, .hall-table.champions .gm a:focus-visible { text-decoration: underline; text-underline-offset: 4px; }
+.hall-tabs .chip { text-decoration: none; }
+@media (max-width: 720px) {
+  .hall-table.champions .th, .hall-table.champions .tr { grid-template-columns: minmax(0, 1.3fr) 1fr 80px 84px; }
+  .hall-table.champions .gm a { font-size: 8px; }
+}
