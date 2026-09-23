@@ -89,6 +89,17 @@ export const GAMES: Game[] = [
     best: 24,
     plays: "4.2K",
   },
+  {
+    id: "asteroids",
+    title: "ASTEROIDS",
+    short: "Blast asteroids into dust in zero gravity.",
+    long: "Your triangular ship drifts through the void. Rotate, thrust, and fire to split asteroids into ever-smaller fragments. Grab the triple-shot power-up to clear the field faster.",
+    category: "SHOOTER",
+    cover: "cover-asteroids",
+    color: "cyan",
+    best: 0,
+    plays: "NEW",
+  },
 ];
 
 export const CATEGORIES: string[] = ["ALL", "ARCADE", "PUZZLE", "SHOOTER", "VERSUS"];

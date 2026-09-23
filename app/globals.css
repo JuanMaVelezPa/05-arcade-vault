@@ -513,6 +513,14 @@ a { color: inherit; text-decoration: none; }
   text-shadow: 0 0 8px var(--yellow);
 }
 
+/* asteroids — vector look of the real game: ship firing into a splitting rock */
+.cover-asteroids { background: radial-gradient(circle at 50% 50%, #0a0030 0%, #000 75%); }
+.cover-asteroids::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3Cfilter id='g' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur stdDeviation='3' result='b'/%3E%3CfeMerge%3E%3CfeMergeNode in='b'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url%28%23g%29' fill='none' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'%3E%3Cpolygon points='346,98 327,121 313,145 287,135 259,136 240,113 254,87 260,61 286,54 314,50 325,77' stroke='%23ff006e'/%3E%3Cpolygon points='117,222 113,243 92,244 73,248 64,231 58,211 76,202 93,193 109,205' stroke='%23f5ff00'/%3E%3Cpolygon points='355,240 346,248 338,256 328,250 321,240 329,231 338,225 348,230' stroke='%23ff006e'/%3E%3Cg stroke='%23ff006e' stroke-width='2'%3E%3Cpath d='M236 120L226 128'/%3E%3Cpath d='M244 136L236 146'/%3E%3Cpath d='M230 104L218 104'/%3E%3C/g%3E%3Cpolygon points='135,179 122,194 141,191' stroke='%23ff8c00'/%3E%3Cpolygon points='180,161 125,175 140,184 140,201' stroke='%2300f5ff'/%3E%3Cg fill='%23fff' stroke='none'%3E%3Ccircle cx='195' cy='152' r='2.6'/%3E%3Ccircle cx='218' cy='140' r='2.6'/%3E%3Ccircle cx='241' cy='127' r='2.6'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") center / cover no-repeat;
+}
+
 .cover-rana { background: linear-gradient(180deg,#001f2a,#0a0a18); }
 .cover-rana::after {
   content: "";
@@ -689,6 +697,65 @@ a { color: inherit; text-decoration: none; }
 .crt-bottom .led::before {
   content: ""; width: 8px; height: 8px; border-radius: 50%;
   background: var(--green); box-shadow: 0 0 6px var(--green);
+}
+
+/* asteroids — real canvas game (800×600 logical, scaled to the 4:3 screen).
+   Kept non-positioned so .crt-screen::before/::after (vignette, scanlines) paint on top. */
+.asteroids-canvas {
+  display: block;
+  width: 100%; height: 100%;
+  background: #000;
+}
+/* touch-only notice: the keys the game needs, drawn as neon keycaps */
+.kbd-required {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: clamp(10px, 3.2cqw, 20px);
+  padding: 0 8%;
+  text-align: center;
+  background: radial-gradient(circle at 50% 45%, #0a0030 0%, #000 70%);
+  container-type: size;
+}
+.kbd-cluster {
+  --key: clamp(20px, 8cqw, 40px);
+  display: grid;
+  grid-template-columns: repeat(3, var(--key));
+  grid-template-rows: var(--key) var(--key) calc(var(--key) * 0.8);
+  gap: calc(var(--key) * 0.14);
+}
+.kbd-key {
+  display: grid; place-items: center;
+  border: 2px solid var(--ink-faint);
+  border-bottom-width: 4px;
+  border-radius: 4px;
+  font-family: var(--pixel);
+  font-size: calc(var(--key) * 0.34);
+  color: var(--ink-faint);
+}
+.kbd-key.on {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 8px rgba(0,245,255,0.45), inset 0 0 6px rgba(0,245,255,0.2);
+  text-shadow: 0 0 6px rgba(0,245,255,0.7);
+}
+.kbd-up { grid-column: 2; grid-row: 1; }
+.kbd-left { grid-column: 1; grid-row: 2; }
+.kbd-down { grid-column: 2; grid-row: 2; }
+.kbd-right { grid-column: 3; grid-row: 2; }
+.kbd-space { grid-column: 1 / -1; grid-row: 3; margin-top: calc(var(--key) * 0.2); font-size: calc(var(--key) * 0.26); letter-spacing: 0.2em; }
+.kbd-title {
+  font-size: clamp(10px, 3.4cqw, 18px);
+  color: var(--yellow);
+  text-shadow: 0 0 6px rgba(245,255,0,0.6), 0 0 16px rgba(245,255,0,0.35);
+  line-height: 1.4;
+}
+.kbd-text {
+  max-width: 34ch;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: clamp(10px, 2.6cqw, 13px);
+  line-height: 1.5;
+  color: var(--ink-dim);
 }
 
 /* fake in-screen game */
