@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { GAMES, seededScores } from "@/lib/data";
+import { getGame } from "@/lib/catalog";
+import { seededScores } from "@/lib/data";
+import { formatPlays } from "@/lib/format";
 
 export default async function GameDetailPage({ params }: PageProps<"/game/[id]">) {
   const { id } = await params;
-  const game = GAMES.find((g) => g.id === id);
+  const game = await getGame(id);
   if (!game) notFound();
 
   const scores = seededScores(id.length * 17 + 3, 10);
@@ -27,7 +29,7 @@ export default async function GameDetailPage({ params }: PageProps<"/game/[id]">
           <div className="stat-strip">
             <div>
               <div className="l">Plays</div>
-              <div className="v">{game.plays}</div>
+              <div className="v">{formatPlays(game.plays)}</div>
             </div>
             <div>
               <div className="l">Global Best</div>
