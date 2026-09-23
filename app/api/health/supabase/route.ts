@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const { error } = await getSupabase().storage.listBuckets();
+    const supabase = await getSupabase();
+    const { error } = await supabase.storage.listBuckets();
 
     if (error) {
       return NextResponse.json(

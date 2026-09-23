@@ -4,26 +4,29 @@
 **Depends on:** none
 **Date:** 2026-09-23
 
-**Objective:** Connect the Next.js app to the existing Supabase project (`bawmqxekwcabsuhdyxes`) through a server-only client helper, verified by a health-check API route, without wiring any feature to it yet.
+**Objective:** Connect the Next.js app to the existing Supabase project (`bawmqxekwcabsuhdyxes`) and leave the full `@supabase/ssr` setup in place: a cookie-aware server client, a browser client, and a `proxy.ts` session refresher. A health-check API route verifies the connection. No feature (login, tables, realtime) is wired to it yet.
 
 ## Scope
 
 ### In scope
 
-- Adding the `@supabase/supabase-js` package as a dependency.
-- Two environment variables with the `NEXT_PUBLIC_` prefix, the naming Supabase recommends for Next.js. In this spec they are read from `process.env` only in server code:
+- Adding the `@supabase/supabase-js` and `@supabase/ssr` packages as dependencies.
+- Two environment variables with the `NEXT_PUBLIC_` prefix, the naming Supabase recommends for Next.js:
   - `NEXT_PUBLIC_SUPABASE_URL` — the project API URL.
   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — the project's publishable (anon) key.
 - Documenting both variables in the existing `.env.example` (placeholder values, no real key). The real values live in `.env.local`, which is already gitignored by the `.env*` rule in `.gitignore`.
-- A server-only client helper at `lib/supabase/server.ts` that exports a `getSupabase()` function. It reads the two env vars, throws a clear error if either one is missing, and returns a `SupabaseClient` created with `createClient()`. The file starts with `import "server-only"` so any accidental import from a client component fails the build.
+- A shared env helper at `lib/supabase/env.ts` that reads both variables and throws a clear error if either one is missing. The server client, the browser client, and the proxy all use it.
+- A server client helper at `lib/supabase/server.ts` that exports an async `getSupabase()`. It uses `createServerClient()` from `@supabase/ssr` with the request cookies from `next/headers`. The file starts with `import "server-only"` so any accidental import from a client component fails the build.
+- A browser client helper at `lib/supabase/client.ts` that exports `getSupabaseBrowser()`, built with `createBrowserClient()` from `@supabase/ssr`. Nothing uses it yet; future Auth and Realtime specs will.
+- A session refresher: `lib/supabase/proxy.ts` exports `updateSession(request)`, and a root `proxy.ts` (the Next.js 16 name for the former `middleware.ts`) calls it on every page request except static assets.
 - A health-check endpoint at `app/api/health/supabase/route.ts` (GET) that uses `getSupabase()` to make one real network round-trip to Supabase and reports whether the connection works.
 
 ### Not in scope
 
 - Any database table, migration, or RLS policy. The `public` schema stays empty.
 - Replacing the `localStorage` score storage in `lib/scores.ts` (`av_scores` key) or the `seededScores` mock leaderboards with Supabase data — deferred to a future scores spec.
-- Supabase Auth, sessions, cookies, `@supabase/ssr`, or a `proxy.ts` session refresher — deferred to a future auth spec.
-- A browser-side Supabase client. The variables already carry the `NEXT_PUBLIC_` prefix so a future auth or realtime spec can add one without renaming them.
+- Login, signup, or logout pages or flows, auth providers, and protected routes or redirects in `proxy.ts` — deferred to a future auth spec.
+- Concrete Realtime subscriptions — deferred to the spec that needs live data.
 - The service-role (secret) key. It is not used anywhere in this spec.
 - Generated TypeScript database types (`supabase gen types`). There are no tables to type yet.
 - The Supabase CLI and a local Supabase stack.
@@ -31,7 +34,7 @@
 
 ## Data model
 
-This feature introduces no persisted data structures and no database tables.
+This feature introduces no persisted data structures and no database tables. Session cookies written by `@supabase/ssr` only appear once a future spec adds login.
 
 New in-memory shapes:
 
@@ -43,13 +46,39 @@ New in-memory shapes:
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
   ```
 
+- **`lib/supabase/env.ts`**
+
+  ```ts
+  export function getSupabaseEnv(): { url: string; key: string };
+  ```
+
+  Throws `Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY")` when an env variable is empty or undefined. It references both variables literally so Next.js can inline them in browser code.
+
 - **`lib/supabase/server.ts`**
 
   ```ts
-  export function getSupabase(): SupabaseClient;
+  export async function getSupabase(): Promise<SupabaseClient>;
   ```
 
-  Throws `Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY")` when an env variable is empty or undefined. Created with `auth: { persistSession: false }`, because there is no user session on the server in this spec.
+  Created with `createServerClient()` and `await cookies()`. `setAll` ignores the error thrown when it is called from a Server Component, because `proxy.ts` refreshes the session. A new client is created per request; it is never cached at module level.
+
+- **`lib/supabase/client.ts`**
+
+  ```ts
+  export function getSupabaseBrowser(): SupabaseClient;
+  ```
+
+- **`lib/supabase/proxy.ts`**
+
+  ```ts
+  export async function updateSession(
+    request: NextRequest,
+  ): Promise<NextResponse>;
+  ```
+
+  Follows the official Supabase Next.js pattern: creates a server client bound to the request and response cookies, copies any cookies and cache headers from `setAll` onto the response, and calls `supabase.auth.getClaims()` right after creating the client. If the env variables are missing, it returns `NextResponse.next({ request })` without touching Supabase, so pages keep loading.
+
+- **`proxy.ts`** (project root) — exports `proxy(request)` and a `config.matcher` that skips `_next/static`, `_next/image`, `favicon.ico`, and image files.
 
 - **`GET /api/health/supabase`** response bodies:
 
@@ -65,14 +94,19 @@ New in-memory shapes:
   }
   ```
 
-  The handler calls `supabase.storage.listBuckets()`. This call needs no tables, goes through the Supabase API gateway, and fails if the URL or key is wrong. A returned `error` or a thrown exception (including the missing-env error) produces the `500` body. The route is marked dynamic so Next.js does not cache it at build time.
+  The handler calls `(await getSupabase()).storage.listBuckets()`. This call needs no tables, goes through the Supabase API gateway, and fails if the URL or key is wrong. A returned `error` or a thrown exception (including the missing-env error) produces the `500` body. The route is marked dynamic so Next.js does not cache it at build time.
 
 ## Implementation plan
 
 1. **Add dependency and env scaffolding** — run `npm install @supabase/supabase-js server-only`. Append `NEXT_PUBLIC_SUPABASE_URL=` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=` (with the dashboard comment) to `.env.example`. Put the real URL and publishable key in `.env.local`; get them from the Supabase MCP tools `get_project_url` and `get_publishable_keys`. The app still builds and runs unchanged.
-2. **Create the client helper** — add `lib/supabase/server.ts` with `import "server-only"`, env validation, and `getSupabase()` as described in the data model. Nothing imports it yet, so behavior is unchanged.
-3. **Create the health-check route** — add `app/api/health/supabase/route.ts` with a GET handler that calls `getSupabase().storage.listBuckets()` and returns the `200` or `500` body. Read the Route Handler guide in `node_modules/next/dist/docs/` first to confirm the Next.js 16 conventions for dynamic route handlers.
+2. **Create the client helper** — add `lib/supabase/server.ts` with `import "server-only"`, env validation, and `getSupabase()`. Nothing imports it yet, so behavior is unchanged.
+3. **Create the health-check route** — add `app/api/health/supabase/route.ts` with a GET handler that calls `listBuckets()` and returns the `200` or `500` body. Read the Route Handler guide in `node_modules/next/dist/docs/` first to confirm the Next.js 16 conventions for dynamic route handlers.
 4. **Verify manually** — run `npm run dev`, then `curl http://localhost:3000/api/health/supabase`. Check the success case with valid env values. Check the failure case by temporarily blanking `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local` and restarting the dev server.
+5. **Add `@supabase/ssr` and the shared env helper** — run `npm install @supabase/ssr`. Add `lib/supabase/env.ts` with `getSupabaseEnv()`.
+6. **Move the server client to `@supabase/ssr`** — rewrite `lib/supabase/server.ts` to use `createServerClient()` with `await cookies()` and `getSupabaseEnv()`, keeping `import "server-only"` and making `getSupabase()` async. Update the health route to `await getSupabase()`.
+7. **Add the browser client** — add `lib/supabase/client.ts` with `getSupabaseBrowser()` using `createBrowserClient()` and `getSupabaseEnv()`.
+8. **Add the session refresher** — add `lib/supabase/proxy.ts` with `updateSession()`, and the root `proxy.ts` with its `matcher`. Read the Proxy guide in `node_modules/next/dist/docs/` first to confirm the Next.js 16 file convention.
+9. **Verify again** — repeat the three health-check curls (valid, blank, and invalid key). Check that `/`, `/games`, and `/about` still return `200`. Run `npm run build` and `npm run lint`.
 
 ## Acceptance criteria
 
@@ -81,41 +115,53 @@ New in-memory shapes:
 - [x] No real Supabase URL-key pair or other secret is committed anywhere in the repo.
 - [x] `lib/supabase/server.ts` exists, starts with `import "server-only"`, and exports `getSupabase()`.
 - [x] With valid values in `.env.local`, `GET /api/health/supabase` returns `200` with `{ "ok": true }`.
-- [ ] With `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` empty, `GET /api/health/supabase` returns `500` with `{ "ok": false, "error": "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY" }`.
+- [x] With `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` empty, `GET /api/health/supabase` returns `500` with `{ "ok": false, "error": "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY" }`.
 - [x] With an invalid `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` value, `GET /api/health/supabase` returns `500` with `ok: false`.
 - [x] No client component imports `lib/supabase/server.ts`. Only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` use the `NEXT_PUBLIC_` prefix, and no secret or service-role key is defined with it.
 - [x] The `public` schema in the Supabase project still has no tables.
 - [x] `npm run build` and `npm run lint` complete with no errors.
+- [x] `@supabase/ssr` appears in `package.json` `dependencies`.
+- [x] `lib/supabase/server.ts` uses `createServerClient()` with `cookies()` from `next/headers`, and `getSupabase()` is async.
+- [x] `lib/supabase/client.ts` exports `getSupabaseBrowser()` built with `createBrowserClient()`.
+- [x] `proxy.ts` exists at the project root, calls `updateSession()` from `lib/supabase/proxy.ts`, and its `matcher` excludes static assets.
+- [x] With the proxy in place, `/`, `/games`, and `/about` still return `200` and look unchanged.
+- [x] After the `@supabase/ssr` change, the three health-check cases (valid, blank, and invalid key) still return the responses above.
 
 ## Decisions taken and discarded
 
 - **Quick definition without detailed clarification** — the user asked for the connection plan only and declined the broader question block (scores table, auth, runtime, migrations). The choices below are defaults picked for a connection-only slice. Revisit them in the spec that adds the first real feature.
 - **Yes: connection only, no feature wiring** — explicit user decision. Scores, auth, and contact persistence each need their own data-model and RLS decisions, so each gets its own spec.
-- **Yes: `@supabase/supabase-js` on the server only** — matches the existing pattern from spec 03, where external services (Resend) are called only from Route Handlers. No client code uses the client yet, so nothing Supabase-related is sent to the browser in this spec.
-- **No: `@supabase/ssr` and a browser client now** — only needed for cookie-based Auth sessions. Adding it without Auth means code with no user.
+- **Yes: full `@supabase/ssr` setup in this spec** — changed during implementation at the user's request: this spec owns the Supabase connection and configuration, so it leaves the server client, browser client, and session refresher ready. The auth spec then only adds the login flow, and realtime can use the browser client directly.
+- **No (discarded): `@supabase/supabase-js` on the server only, deferring `@supabase/ssr` to the auth spec** — first draft of this spec. It was replaced by the decision above.
+- **Yes: `getClaims()` in `updateSession()`** — the official Supabase pattern. Without a session cookie it returns without a network call, so the proxy adds almost no cost until login exists.
+- **Yes: the proxy skips Supabase when env vars are missing** — a missing variable must not take down every page. The health route still reports the missing-env error.
+- **Yes: shared `getSupabaseEnv()`** — one place for the variable names and the error message, used by server, browser, and proxy.
 - **Yes: publishable key, not service-role key** — the publishable key respects RLS. If it leaks, the damage is limited to what future RLS policies allow. The service-role key bypasses RLS and is not needed to prove the connection.
-- **Yes: `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` with the `NEXT_PUBLIC_` prefix** — this is the naming Supabase recommends for Next.js. Future Auth (`@supabase/ssr`, with a server and a browser client) and Realtime (subscriptions opened from the browser) both need these values in the browser, so the prefix avoids a later rename or a duplicated pair. Both values are public by design: the URL is not a secret, and the publishable key is restricted by RLS. Next.js only inlines them into code that runs in the browser, and no such code exists in this spec.
-- **No: `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` without the prefix** — first draft of this spec. It was discarded because Auth and Realtime would force a rename later.
+- **Yes: `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` with the `NEXT_PUBLIC_` prefix** — this is the naming Supabase recommends for Next.js. The browser client needs these values in the browser. Both values are public by design: the URL is not a secret, and the publishable key is restricted by RLS.
+- **No: `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` without the prefix** — first draft of this spec. It was discarded because the browser client would force a rename.
 - **Rule for future specs: secret keys never get `NEXT_PUBLIC_`** — the service-role or secret key, if a later spec needs it, must be a server-only variable such as `SUPABASE_SECRET_KEY`.
-- **Yes: `import "server-only"` guard** — turns an accidental client import into a build error instead of a silent runtime failure.
+- **Yes: `import "server-only"` guard on `server.ts`** — turns an accidental client import into a build error instead of a silent runtime failure.
 - **Yes: `storage.listBuckets()` as the health probe** — it makes a real authenticated request without needing any table. A table-based probe would force a migration into a connection-only spec.
 - **No: health check rendered in the UI** — a curl-able API route is enough to verify, and it adds no visual surface to maintain.
 - **No: Supabase CLI and local stack** — needs Docker in WSL2 and is not required to reach the hosted project.
 
 ## Identified risks
 
-| Risk                                                      | Mitigation                                                                                                                        |
-| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Env variables not set in a fresh clone or a deploy target | `getSupabase()` throws a named error, and the health route returns it in the `500` body. `.env.example` documents both variables. |
-| Health route exposes a public endpoint                    | The route returns only `ok` and an error string. It does not return keys, the project URL, or bucket names.                       |
-| `listBuckets()` returns an empty list under RLS           | Success is judged by the absence of `error`, not by the list content.                                                             |
-| Free-tier Supabase project paused for inactivity          | The health route returns `500`. Restore the project from the Supabase dashboard.                                                  |
+| Risk                                                      | Mitigation                                                                                                                                |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Env variables not set in a fresh clone or a deploy target | `getSupabaseEnv()` throws a named error, the health route returns it in the `500` body, and the proxy skips Supabase so pages still load. |
+| Proxy runs on every page request                          | The `matcher` skips static assets, and `getClaims()` makes no network call while there is no session cookie.                              |
+| Auth cookies cached by a CDN once login exists            | `updateSession()` copies the cache headers that `@supabase/ssr` passes to `setAll` onto the response.                                     |
+| Health route exposes a public endpoint                    | The route returns only `ok` and an error string. It does not return keys, the project URL, or bucket names.                               |
+| `listBuckets()` returns an empty list under RLS           | Success is judged by the absence of `error`, not by the list content.                                                                     |
+| Free-tier Supabase project paused for inactivity          | The health route returns `500`. Restore the project from the Supabase dashboard.                                                          |
 
 ## What is **not** in this spec
 
 - Database tables, migrations, or RLS policies.
 - Moving scores or leaderboards from `localStorage` and mock data to Supabase.
-- Supabase Auth or any browser-side Supabase client.
+- Login, signup, or logout flows, and protected routes.
+- Concrete Realtime subscriptions.
 - The service-role key.
 
 Each one of those, if it lands, goes in its own spec.
