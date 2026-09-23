@@ -58,9 +58,9 @@ export const GAMES: Game[] = [
   },
   {
     id: "rocas",
-    title: "ROCKS",
-    short: "Pulverize asteroids in zero gravity.",
-    long: "Your triangular ship floats in absolute vacuum. Shoot and rotate to split rocks into ever-smaller fragments. Watch out for UFOs on the horizon.",
+    title: "ASTEROIDS",
+    short: "Blast asteroids into dust in zero gravity.",
+    long: "Your triangular ship drifts through the void. Rotate, thrust, and fire to split asteroids into ever-smaller fragments. Grab the triple-shot power-up to clear the field faster.",
     category: "SHOOTER",
     cover: "cover-rocas",
     color: "yellow",
