@@ -234,7 +234,7 @@ const RECENT_SCORES = [
   { p: "NEONFOX", g: "DROP", s: 184220, t: "2 min ago", c: "magenta" },
   { p: "PX_KAI", g: "GLUTTON", s: 96400, t: "5 min ago", c: "yellow" },
   { p: "Z3R0COOL", g: "INVADERS", s: 54190, t: "8 min ago", c: "green" },
-  { p: "VAULT_07", g: "ASTEROIDS", s: 41200, t: "12 min ago", c: "cyan" },
+  { p: "VAULT_07", g: "ROCKS", s: 41200, t: "12 min ago", c: "cyan" },
   { p: "GLITCHA", g: "BLOCK BUSTER", s: 28450, t: "18 min ago", c: "cyan" },
   { p: "ARKADYA", g: "SERPENTINE", s: 7820, t: "24 min ago", c: "green" },
   { p: "CYBER_LU", g: "FROG CROSSING", s: 18900, t: "31 min ago", c: "yellow" },

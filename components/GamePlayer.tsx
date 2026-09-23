@@ -15,7 +15,7 @@ interface GamePlayerProps {
 export default function GamePlayer({ game }: GamePlayerProps) {
   const router = useRouter();
   // The only real game so far; every other id keeps the simulated arena.
-  const isAsteroids = game.id === "rocas";
+  const isAsteroids = game.id === "asteroids";
   const asteroidsRef = useRef<AsteroidsHandle>(null);
   // Simulated games: running score, so the interval can bump the level without an effect on `score`.
   const simScoreRef = useRef(0);
