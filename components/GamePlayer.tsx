@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { submitScore } from "@/app/actions/scores";
 import AsteroidsCanvas, { type AsteroidsHandle } from "@/components/games/AsteroidsCanvas";
 import type { AsteroidsHud } from "@/lib/games/asteroids/engine";
-import { saveScore } from "@/lib/scores";
 import type { Game } from "@/lib/types";
 
 interface GamePlayerProps {
@@ -26,6 +26,8 @@ export default function GamePlayer({ game }: GamePlayerProps) {
   const [over, setOver] = useState(false);
   const [name, setName] = useState("GUEST");
   const [saved, setSaved] = useState(false);
+  const [saving, startSaving] = useTransition();
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [tripleShot, setTripleShot] = useState(0);
 
   useEffect(() => {
@@ -60,6 +62,21 @@ export default function GamePlayer({ game }: GamePlayerProps) {
     if (isAsteroids) asteroidsRef.current?.end();
     else setOver(true);
   };
+  const save = () =>
+    startSaving(async () => {
+      try {
+        const result = await submitScore({ gameId: game.id, playerName: name, score });
+        if (result.ok) {
+          setSaveError(null);
+          setSaved(true);
+        } else {
+          setSaveError(result.error);
+        }
+      } catch {
+        // Network failure reaching the action; keep it inline instead of hitting the error boundary
+        setSaveError("SAVE FAILED — TRY AGAIN");
+      }
+    });
   const restart = () => {
     simScoreRef.current = 0;
     setScore(0);
@@ -68,6 +85,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
     setPaused(false);
     setOver(false);
     setSaved(false);
+    setSaveError(null);
     setTripleShot(0);
     if (isAsteroids) asteroidsRef.current?.restart();
   };
@@ -161,23 +179,25 @@ export default function GamePlayer({ game }: GamePlayerProps) {
             <div className="final-label">FINAL SCORE</div>
             <div className="final">{score.toLocaleString("en-US")}</div>
             {!saved ? (
-              <div className="input-row">
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value.toUpperCase().slice(0, 10))}
-                  placeholder="YOUR INITIALS"
-                />
-                <button
-                  type="button"
-                  className="btn yellow"
-                  onClick={() => {
-                    saveScore({ game: game.id, score, name });
-                    setSaved(true);
-                  }}
-                >
-                  SAVE SCORE
-                </button>
-              </div>
+              <>
+                <div className="input-row">
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value.toUpperCase().slice(0, 10))}
+                    placeholder="YOUR INITIALS"
+                    aria-label="Your initials"
+                    aria-describedby={saveError ? "save-error" : undefined}
+                  />
+                  <button type="button" className="btn yellow" onClick={save} disabled={saving}>
+                    {saving ? "SAVING…" : saveError ? "RETRY" : "SAVE SCORE"}
+                  </button>
+                </div>
+                {saveError && (
+                  <div id="save-error" className="save-error" role="alert">
+                    {saveError}
+                  </div>
+                )}
+              </>
             ) : (
               <div className="toast-saved">▸ SCORE SAVED_</div>
             )}

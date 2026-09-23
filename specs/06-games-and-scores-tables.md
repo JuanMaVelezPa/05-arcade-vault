@@ -1,6 +1,6 @@
 # 06 — Games and Scores Tables
 
-**State:** Approved
+**State:** Implemented
 **Depends on:** 01-mvp-screens, 02-home-landing-and-games-route, 04-supabase-connection, 05-asteroids-game
 **Date:** 2026-09-23
 
@@ -187,25 +187,25 @@ Validation happens before the insert: `playerName` is trimmed and must match `^[
 
 ## Acceptance criteria
 
-- [ ] `supabase/migrations/0001_games_and_scores.sql` exists in the repo and is applied: `list_tables` shows `games` (9 rows) and `scores`, both with RLS enabled.
-- [ ] `get_advisors` (security) reports no errors for `games`, `scores`, or `game_stats`.
-- [ ] `lib/supabase/database.types.ts` exists, and both Supabase clients are typed with `Database`.
-- [ ] `lib/data.ts` no longer exports `GAMES`, `PLAYERS`, or `seededScores`. `lib/scores.ts` and the `SavedScore` type no longer exist. No code references `av_scores`.
-- [ ] `/`, `/games`, `/game/[id]`, `/player/[id]`, and `/hall-of-fame` render the 9 games from Supabase in `sort_order`. Titles, copy, and covers are identical to before.
-- [ ] `/game/unknown-id` and `/player/unknown-id` still return the 404 page.
-- [ ] With no scores for a game, `/game/<id>` shows `NO SCORES YET — BE THE FIRST`, Global Best `0`, and Plays `NEW`.
-- [ ] With no scores for the selected game, `/hall-of-fame?game=<id>` shows `---` in all three podium slots and the empty-state line.
-- [ ] Saving a score from the GAME OVER modal inserts one `scores` row with the right `game_id`, `player_name`, and `score`. After the save, `/game/<id>` and `/hall-of-fame?game=<id>` list it with today's date, it becomes that game's champion on `/hall-of-fame` if it is the top score, and Global Best and Plays reflect it.
-- [ ] `/hall-of-fame` with no `?game` shows the ALL GAMES tab selected: one row per game (9) in `sort_order`, each game's #1 score, `---` for games with no scores, and no podium.
-- [ ] A champion's GAME cell links to `/hall-of-fame?game=<id>`. An unknown `?game` value falls back to ALL GAMES.
-- [ ] Leaderboards order by score desc. When scores tie, the earlier row ranks higher. `/game/[id]` shows at most 10 rows, and `/hall-of-fame` shows at most 12.
-- [ ] The Hall of Fame tabs are links that change `?game=`, and loading `/hall-of-fame?game=asteroids` directly selects the ASTEROIDS tab.
+- [x] `supabase/migrations/0001_games_and_scores.sql` exists in the repo and is applied: `list_tables` shows `games` (9 rows) and `scores`, both with RLS enabled.
+- [x] `get_advisors` (security) reports no errors for `games`, `scores`, or `game_stats`.
+- [x] `lib/supabase/database.types.ts` exists, and both Supabase clients are typed with `Database`.
+- [x] `lib/data.ts` no longer exports `GAMES`, `PLAYERS`, or `seededScores`. `lib/scores.ts` and the `SavedScore` type no longer exist. No code references `av_scores`.
+- [x] `/`, `/games`, `/game/[id]`, `/player/[id]`, and `/hall-of-fame` render the 9 games from Supabase in `sort_order`. Titles, copy, and covers are identical to before.
+- [x] `/game/unknown-id` and `/player/unknown-id` still return the 404 page.
+- [x] With no scores for a game, `/game/<id>` shows `NO SCORES YET — BE THE FIRST`, Global Best `0`, and Plays `NEW`.
+- [x] With no scores for the selected game, `/hall-of-fame?game=<id>` shows `---` in all three podium slots and the empty-state line.
+- [x] Saving a score from the GAME OVER modal inserts one `scores` row with the right `game_id`, `player_name`, and `score`. After the save, `/game/<id>` and `/hall-of-fame?game=<id>` list it with today's date, it becomes that game's champion on `/hall-of-fame` if it is the top score, and Global Best and Plays reflect it.
+- [x] `/hall-of-fame` with no `?game` shows the ALL GAMES tab selected: one row per game (9) in `sort_order`, each game's #1 score, `---` for games with no scores, and no podium.
+- [x] A champion's GAME cell links to `/hall-of-fame?game=<id>`. An unknown `?game` value falls back to ALL GAMES.
+- [x] Leaderboards order by score desc. When scores tie, the earlier row ranks higher. `/game/[id]` shows at most 10 rows, and `/hall-of-fame` shows at most 12.
+- [x] The Hall of Fame tabs are links that change `?game=`, and loading `/hall-of-fame?game=asteroids` directly selects the ASTEROIDS tab.
 - [ ] SAVE SCORE with empty initials shows an inline error and inserts nothing. While saving, the button is disabled and shows `SAVING…`.
-- [ ] When the insert fails, the modal shows `SAVE FAILED — TRY AGAIN` and a `RETRY` button, and it keeps the typed initials.
+- [x] When the insert fails, the modal shows `SAVE FAILED — TRY AGAIN` and a `RETRY` button, and it keeps the typed initials.
 - [ ] Using the publishable key against the REST API, an UPDATE or DELETE on `scores` and an INSERT on `games` are rejected. An INSERT on `scores` that sets `created_at` is rejected.
-- [ ] With the publishable key blanked, catalog pages show the `VAULT OFFLINE` panel instead of crashing.
-- [ ] QA rows are deleted from `scores` at the end, and `scores` is empty on handoff.
-- [ ] `npm run build` and `npm run lint` complete with no errors.
+- [x] With the publishable key blanked, catalog pages show the `VAULT OFFLINE` panel instead of crashing.
+- [x] QA rows are deleted from `scores` at the end, and `scores` is empty on handoff.
+- [x] `npm run build` and `npm run lint` complete with no errors.
 
 ## Decisions taken and discarded
 
