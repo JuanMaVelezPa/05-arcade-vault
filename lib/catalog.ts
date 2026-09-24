@@ -25,7 +25,11 @@ function toGame(row: GameRow, stats: StatsRow | undefined): Game {
 export async function getGames(): Promise<Game[]> {
   const supabase = await getSupabase();
   const [games, stats] = await Promise.all([
-    supabase.from("games").select("*").order("sort_order"),
+    supabase
+      .from("games")
+      .select("*")
+      .eq("is_published", true)
+      .order("sort_order"),
     supabase.from("game_stats").select("*"),
   ]);
   if (games.error)
@@ -40,7 +44,12 @@ export async function getGames(): Promise<Game[]> {
 export async function getGame(id: string): Promise<Game | null> {
   const supabase = await getSupabase();
   const [game, stats] = await Promise.all([
-    supabase.from("games").select("*").eq("id", id).maybeSingle(),
+    supabase
+      .from("games")
+      .select("*")
+      .eq("id", id)
+      .eq("is_published", true)
+      .maybeSingle(),
     supabase.from("game_stats").select("*").eq("game_id", id).maybeSingle(),
   ]);
   if (game.error) throw new Error(`games query failed: ${game.error.message}`);
@@ -76,7 +85,11 @@ export async function getTopScores(
 export async function getChampions(): Promise<Champion[]> {
   const supabase = await getSupabase();
   const [games, champions] = await Promise.all([
-    supabase.from("games").select("id, title, color").order("sort_order"),
+    supabase
+      .from("games")
+      .select("id, title, color")
+      .eq("is_published", true)
+      .order("sort_order"),
     supabase.from("game_champions").select("*"),
   ]);
   if (games.error)

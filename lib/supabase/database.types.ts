@@ -22,6 +22,7 @@ export type Database = {
           created_at: string;
           description: string;
           id: string;
+          is_published: boolean;
           sort_order: number;
           tagline: string;
           title: string;
@@ -33,6 +34,7 @@ export type Database = {
           created_at?: string;
           description: string;
           id: string;
+          is_published?: boolean;
           sort_order: number;
           tagline: string;
           title: string;
@@ -44,6 +46,7 @@ export type Database = {
           created_at?: string;
           description?: string;
           id?: string;
+          is_published?: boolean;
           sort_order?: number;
           tagline?: string;
           title?: string;

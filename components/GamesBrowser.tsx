@@ -15,6 +15,11 @@ export default function GamesBrowser({ games }: { games: Game[] }) {
     );
   }, [games, query, category]);
 
+  const categories = useMemo(
+    () => CATEGORIES.filter((c) => c === "ALL" || games.some((g) => g.category === c)),
+    [games]
+  );
+
   return (
     <div className="fade-in">
       <section className="av-hero">
@@ -30,7 +35,7 @@ export default function GamesBrowser({ games }: { games: Game[] }) {
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search a game by name…" />
         </div>
         <div className="av-chips">
-          {CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <button
               key={c}
               type="button"
