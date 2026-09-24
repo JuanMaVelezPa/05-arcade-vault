@@ -1,6 +1,6 @@
 # 07 — Published Games Only
 
-**State:** Approved
+**State:** Implemented
 **Depends on:** 05-asteroids-game, 06-games-and-scores-tables
 **Date:** 2026-09-24
 
