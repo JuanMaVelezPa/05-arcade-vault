@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { submitScore } from "@/app/actions/scores";
-import AsteroidsCanvas, { type AsteroidsHandle } from "@/components/games/AsteroidsCanvas";
-import type { AsteroidsHud } from "@/lib/games/asteroids/engine";
+import GameCanvas, { type GameHandle } from "@/components/games/GameCanvas";
+import { GAME_REGISTRY, type GameEntry } from "@/lib/games/registry";
+import type { GameHud, HudExtra } from "@/lib/games/types";
 import type { Game } from "@/lib/types";
 
 interface GamePlayerProps {
@@ -14,9 +15,10 @@ interface GamePlayerProps {
 
 export default function GamePlayer({ game }: GamePlayerProps) {
   const router = useRouter();
-  // The only real game so far; every other id keeps the simulated arena.
-  const isAsteroids = game.id === "asteroids";
-  const asteroidsRef = useRef<AsteroidsHandle>(null);
+  // Real canvas games come from the registry; every other id keeps the simulated arena.
+  const entry: GameEntry | undefined = Object.hasOwn(GAME_REGISTRY, game.id) ? GAME_REGISTRY[game.id] : undefined;
+  const isReal = entry !== undefined;
+  const gameRef = useRef<GameHandle>(null);
   // Simulated games: running score, so the interval can bump the level without an effect on `score`.
   const simScoreRef = useRef(0);
   const [score, setScore] = useState(0);
@@ -28,10 +30,10 @@ export default function GamePlayer({ game }: GamePlayerProps) {
   const [saved, setSaved] = useState(false);
   const [saving, startSaving] = useTransition();
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [tripleShot, setTripleShot] = useState(0);
+  const [extras, setExtras] = useState<HudExtra[]>([]);
 
   useEffect(() => {
-    if (isAsteroids || over || paused) return;
+    if (isReal || over || paused) return;
     const t = setInterval(() => {
       const next = simScoreRef.current + Math.floor(10 + Math.random() * 90);
       simScoreRef.current = next;
@@ -39,14 +41,14 @@ export default function GamePlayer({ game }: GamePlayerProps) {
       if (next % 2500 < 100) setLevel((l) => l + 1);
     }, 220);
     return () => clearInterval(t);
-  }, [isAsteroids, over, paused]);
+  }, [isReal, over, paused]);
 
-  // Asteroids: the engine owns pause and game over; React mirrors it via callbacks.
-  const handleHud = (hud: AsteroidsHud) => {
+  // Real games: the engine owns pause and game over; React mirrors it via callbacks.
+  const handleHud = (hud: GameHud) => {
     setScore(hud.score);
     setLives(hud.lives);
     setLevel(hud.level);
-    setTripleShot(hud.tripleShot);
+    setExtras(hud.extras ?? []);
   };
   const handleGameOver = (finalScore: number) => {
     setScore(finalScore);
@@ -54,12 +56,12 @@ export default function GamePlayer({ game }: GamePlayerProps) {
   };
 
   const togglePause = () => {
-    if (!isAsteroids) return setPaused((p) => !p);
-    if (paused) asteroidsRef.current?.resume();
-    else asteroidsRef.current?.pause();
+    if (!isReal) return setPaused((p) => !p);
+    if (paused) gameRef.current?.resume();
+    else gameRef.current?.pause();
   };
   const endGame = () => {
-    if (isAsteroids) asteroidsRef.current?.end();
+    if (isReal) gameRef.current?.end();
     else setOver(true);
   };
   const save = () =>
@@ -86,8 +88,8 @@ export default function GamePlayer({ game }: GamePlayerProps) {
     setOver(false);
     setSaved(false);
     setSaveError(null);
-    setTripleShot(0);
-    if (isAsteroids) asteroidsRef.current?.restart();
+    setExtras([]);
+    if (isReal) gameRef.current?.restart();
   };
 
   return (
@@ -112,12 +114,12 @@ export default function GamePlayer({ game }: GamePlayerProps) {
             <div className="l">Level</div>
             <div className="v">{String(level).padStart(2, "0")}</div>
           </div>
-          {isAsteroids && tripleShot > 0 && (
-            <div className="hud-stat">
-              <div className="l">3X</div>
-              <div className="v">{tripleShot.toFixed(1)}s</div>
+          {extras.map((x) => (
+            <div key={x.label} className="hud-stat">
+              <div className="l">{x.label}</div>
+              <div className="v">{x.value}</div>
             </div>
-          )}
+          ))}
         </div>
         <div className="hud-actions">
           <button type="button" className="btn yellow" onClick={togglePause}>
@@ -134,9 +136,10 @@ export default function GamePlayer({ game }: GamePlayerProps) {
 
       <div className="crt">
         <div className="crt-screen">
-          {isAsteroids ? (
-            <AsteroidsCanvas
-              ref={asteroidsRef}
+          {entry ? (
+            <GameCanvas
+              entry={entry}
+              ref={gameRef}
               onHud={handleHud}
               onGameOver={handleGameOver}
               onPauseChange={setPaused}
@@ -157,7 +160,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
                   PAUSED
                 </div>
                 <div className="mono" style={{ fontSize: 11, color: "var(--ink-dim)", marginTop: 10, letterSpacing: "0.16em" }}>
-                  {isAsteroids ? "PRESS P OR RESUME TO CONTINUE" : "PRESS RESUME TO CONTINUE"}
+                  {isReal ? "PRESS P OR RESUME TO CONTINUE" : "PRESS RESUME TO CONTINUE"}
                 </div>
               </div>
             </div>
