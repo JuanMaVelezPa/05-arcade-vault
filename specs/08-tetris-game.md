@@ -1,6 +1,6 @@
 # 08 — TETRIS Game
 
-**State:** Approved
+**State:** Implemented
 **Depends on:** 05-asteroids-game, 06-games-and-scores-tables, 07-published-games-only
 **Date:** 2026-09-28
 
@@ -105,34 +105,34 @@ HUD payload: `{ score, lives: 0, level, extras: [{ label: "LINES", value: String
 
 ## Acceptance criteria
 
-- [ ] `/games` lists TETRIS with its `cover-tetris` art and the `PUZZLE` chip, linking to `/game/tetris`.
-- [ ] `/game/tetris` shows the new copy, Global Best `0`, Plays `NEW`, and `NO SCORES YET — BE THE FIRST` before any save.
-- [ ] `/player/tetris` renders a 450 × 600 logical canvas, letterboxed inside the CRT screen, with the scanline overlay on top.
-- [ ] ↝ and → move the piece. ↑ and X rotate it, with wall kicks next to the walls.
-- [ ] ↓ moves the piece down one row and adds 1 point.
-- [ ] Space drops the piece instantly and adds 2 points per cell.
-- [ ] The ghost piece shows the landing position.
-- [ ] The side column shows the next piece, and it becomes the current piece on the next spawn.
-- [ ] Clearing 1, 2, 3, or 4 lines adds 100, 300, 500, or 800 × level.
-- [ ] `LINES` counts the cleared lines. The level rises every 10 lines, and the pieces fall faster.
-- [ ] The nut piece spawns and can be moved, rotated, and locked.
-- [ ] The React HUD shows the live score, `—` for lives, the level, and `LINES`. The canvas draws no HUD or overlay text.
-- [ ] PAUSE/RESUME, P, and Escape pause and resume the game, and the button label stays in sync.
-- [ ] Switching tabs leaves the game paused.
-- [ ] Topping out opens GAME OVER with the real final score.
-- [ ] Pressing END opens GAME OVER with the real final score.
-- [ ] Typing initials in the modal does not control the game.
-- [ ] SAVE SCORE inserts a `scores` row with `game_id: "tetris"`.
-- [ ] The saved score shows on `/game/tetris`, on `/hall-of-fame?game=tetris`, and as the TETRIS champion on `/hall-of-fame`.
-- [ ] PLAY AGAIN starts a fresh run with an empty board, score 0, level 1, and lines 0.
-- [ ] Arrow keys and Space do not scroll the page.
-- [ ] Leaving the page stops the loop with no console errors.
-- [ ] A touch-only viewport shows the "KEYBOARD REQUIRED" notice.
-- [ ] `/player/asteroids` still works: movement, HUD, the `3X` stat, pause, END, and save.
-- [ ] The migration file exists and is applied.
-- [ ] `get_advisors` (security) reports no new errors.
-- [ ] QA score rows are deleted.
-- [ ] `npm run build` and `npm run lint` complete with no errors.
+- [x] `/games` lists TETRIS with its `cover-tetris` art and the `PUZZLE` chip, linking to `/game/tetris`.
+- [x] `/game/tetris` shows the new copy, Global Best `0`, Plays `NEW`, and `NO SCORES YET — BE THE FIRST` before any save.
+- [x] `/player/tetris` renders a 450 × 600 logical canvas, letterboxed inside the CRT screen, with the scanline overlay on top.
+- [x] ↝ and → move the piece. ↑ and X rotate it, with wall kicks next to the walls.
+- [x] ↓ moves the piece down one row and adds 1 point.
+- [x] Space drops the piece instantly and adds 2 points per cell.
+- [x] The ghost piece shows the landing position.
+- [x] The side column shows the next piece, and it becomes the current piece on the next spawn.
+- [x] Clearing 1, 2, 3, or 4 lines adds 100, 300, 500, or 800 × level.
+- [x] `LINES` counts the cleared lines. The level rises every 10 lines, and the pieces fall faster.
+- [x] The nut piece spawns and can be moved, rotated, and locked.
+- [x] The React HUD shows the live score, `—` for lives, the level, and `LINES`. The canvas draws no HUD or overlay text.
+- [x] PAUSE/RESUME, P, and Escape pause and resume the game, and the button label stays in sync.
+- [x] Switching tabs leaves the game paused.
+- [x] Topping out opens GAME OVER with the real final score.
+- [x] Pressing END opens GAME OVER with the real final score.
+- [x] Typing initials in the modal does not control the game.
+- [x] SAVE SCORE inserts a `scores` row with `game_id: "tetris"`.
+- [x] The saved score shows on `/game/tetris`, on `/hall-of-fame?game=tetris`, and as the TETRIS champion on `/hall-of-fame`.
+- [x] PLAY AGAIN starts a fresh run with an empty board, score 0, level 1, and lines 0.
+- [x] Arrow keys and Space do not scroll the page.
+- [x] Leaving the page stops the loop with no console errors.
+- [x] A touch-only viewport shows the "KEYBOARD REQUIRED" notice.
+- [x] `/player/asteroids` still works: movement, HUD, the `3X` stat, pause, END, and save.
+- [x] The migration file exists and is applied.
+- [x] `get_advisors` (security) reports no new errors.
+- [x] QA score rows are deleted.
+- [x] `npm run build` and `npm run lint` complete with no errors.
 
 ## Decisions taken and discarded
 

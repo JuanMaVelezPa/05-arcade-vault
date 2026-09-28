@@ -1,4 +1,5 @@
 import { createAsteroids } from "./asteroids/engine";
+import { createTetris } from "./tetris/engine";
 import type { CreateGame } from "./types";
 
 export type ControlKey = "←" | "→" | "↑" | "↓" | "SPACE";
@@ -24,6 +25,18 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     controls: {
       keys: ["←", "→", "↑", "SPACE"],
       text: "Asteroids is played with the arrow keys and Space. Open this page on a computer to play.",
+    },
+  },
+  tetris: {
+    create: createTetris,
+    width: 450,
+    height: 600,
+    input: "keyboard",
+    ariaLabel:
+      "Tetris game. Left and right arrows move, Up or X rotates, Down soft drops, Space hard drops, P pauses.",
+    controls: {
+      keys: ["←", "→", "↑", "↓", "SPACE"],
+      text: "Tetris is played with the arrow keys and Space. Open this page on a computer to play.",
     },
   },
 };
