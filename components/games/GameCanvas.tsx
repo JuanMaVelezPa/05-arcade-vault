@@ -8,22 +8,20 @@ import {
   useSyncExternalStore,
   type Ref,
 } from "react";
-import {
-  createAsteroids,
-  type AsteroidsEngine,
-  type AsteroidsHud,
-} from "@/lib/games/asteroids/engine";
+import type { ControlKey, GameEntry } from "@/lib/games/registry";
+import type { GameEngine, GameHud } from "@/lib/games/types";
 
-export interface AsteroidsHandle {
+export interface GameHandle {
   pause(): void;
   resume(): void;
   end(): void;
   restart(): void;
 }
 
-interface AsteroidsCanvasProps {
-  ref?: Ref<AsteroidsHandle>;
-  onHud: (hud: AsteroidsHud) => void;
+interface GameCanvasProps {
+  entry: GameEntry;
+  ref?: Ref<GameHandle>;
+  onHud: (hud: GameHud) => void;
   onGameOver: (finalScore: number) => void;
   onPauseChange: (paused: boolean) => void;
 }
@@ -54,29 +52,33 @@ function getServerInputMode(): InputMode {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function AsteroidsCanvas({
+export default function GameCanvas({
+  entry,
   ref,
   onHud,
   onGameOver,
   onPauseChange,
-}: AsteroidsCanvasProps) {
+}: GameCanvasProps) {
   const mode = useSyncExternalStore(
     subscribeInputMode,
     getInputMode,
     getServerInputMode,
   );
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const engineRef = useRef<AsteroidsEngine | null>(null);
+  const engineRef = useRef<GameEngine | null>(null);
+  const { create } = entry;
+  const needsKeyboard = entry.input === "keyboard";
+  const blocked = needsKeyboard && mode === "touch";
 
   // Latest callbacks without recreating the engine when the parent re-renders.
-  const handleHud = useEffectEvent((hud: AsteroidsHud) => onHud(hud));
+  const handleHud = useEffectEvent((hud: GameHud) => onHud(hud));
   const handleGameOver = useEffectEvent((score: number) => onGameOver(score));
   const handlePauseChange = useEffectEvent((p: boolean) => onPauseChange(p));
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (mode !== "keyboard" || !canvas) return;
-    const engine = createAsteroids(canvas, {
+    if (mode === "pending" || blocked || !canvas) return;
+    const engine = create(canvas, {
       onHud: (hud) => handleHud(hud),
       onGameOver: (score) => handleGameOver(score),
       onPauseChange: (p) => handlePauseChange(p),
@@ -86,7 +88,7 @@ export default function AsteroidsCanvas({
       engine.destroy();
       engineRef.current = null;
     };
-  }, [mode]);
+  }, [mode, blocked, create]);
 
   useImperativeHandle(
     ref,
@@ -100,34 +102,42 @@ export default function AsteroidsCanvas({
   );
 
   if (mode === "pending") return null;
-  if (mode === "touch") return <KeyboardRequired />;
+  if (blocked) return <KeyboardRequired controls={entry.controls} />;
 
   return (
     <canvas
       ref={canvasRef}
-      className="asteroids-canvas"
-      width={800}
-      height={600}
-      aria-label="Asteroids game. Arrow keys rotate and thrust, Space fires, P pauses."
+      className="game-canvas"
+      width={entry.width}
+      height={entry.height}
+      aria-label={entry.ariaLabel}
     />
   );
 }
 
-function KeyboardRequired() {
+const CLUSTER: { key: ControlKey; className: string }[] = [
+  { key: "↑", className: "kbd-up" },
+  { key: "←", className: "kbd-left" },
+  { key: "↓", className: "kbd-down" },
+  { key: "→", className: "kbd-right" },
+  { key: "SPACE", className: "kbd-space" },
+];
+
+function KeyboardRequired({ controls }: { controls: GameEntry["controls"] }) {
   return (
     <div className="kbd-required" role="status">
       <div className="kbd-cluster" aria-hidden="true">
-        <span className="kbd-key on kbd-up">↑</span>
-        <span className="kbd-key on kbd-left">←</span>
-        <span className="kbd-key kbd-down">↓</span>
-        <span className="kbd-key on kbd-right">→</span>
-        <span className="kbd-key on kbd-space">SPACE</span>
+        {CLUSTER.map(({ key, className }) => (
+          <span
+            key={key}
+            className={`kbd-key ${controls.keys.includes(key) ? "on " : ""}${className}`}
+          >
+            {key}
+          </span>
+        ))}
       </div>
       <div className="kbd-title pixel">KEYBOARD REQUIRED</div>
-      <p className="kbd-text">
-        Asteroids is played with the arrow keys and Space. Open this page on a
-        computer to play.
-      </p>
+      <p className="kbd-text">{controls.text}</p>
     </div>
   );
 }

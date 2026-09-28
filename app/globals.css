@@ -699,11 +699,14 @@ a { color: inherit; text-decoration: none; }
   background: var(--green); box-shadow: 0 0 6px var(--green);
 }
 
-/* asteroids — real canvas game (800×600 logical, scaled to the 4:3 screen).
+/* real canvas games — fixed logical resolution, scaled to fit the 4:3 screen.
+   Height fills the screen and the width follows the canvas's own aspect ratio,
+   so 4:3 games fill it and taller games (TETRIS) are letterboxed and centered.
    Kept non-positioned so .crt-screen::before/::after (vignette, scanlines) paint on top. */
-.asteroids-canvas {
+.game-canvas {
   display: block;
-  width: 100%; height: 100%;
+  height: 100%; width: auto; max-width: 100%;
+  margin: 0 auto;
   background: #000;
 }
 /* touch-only notice: the keys the game needs, drawn as neon keycaps */

@@ -2,26 +2,7 @@
 // Framework-free: owns the canvas, the rAF loop, and its keyboard listeners.
 // All state lives inside createAsteroids() so several instances never share it.
 
-export interface AsteroidsHud {
-  score: number;
-  lives: number;
-  level: number;
-  tripleShot: number; // seconds left, 0 when inactive
-}
-
-export interface AsteroidsCallbacks {
-  onHud: (hud: AsteroidsHud) => void; // called only when a value changes (tripleShot rounded to 0.1 s)
-  onGameOver: (finalScore: number) => void; // last life lost, or end() called
-  onPauseChange: (paused: boolean) => void; // P/Escape or tab hidden
-}
-
-export interface AsteroidsEngine {
-  pause(): void;
-  resume(): void;
-  end(): void; // stops the run and fires onGameOver with the current score
-  restart(): void; // new game: score 0, 3 lives, level 1
-  destroy(): void; // cancels rAF and removes all listeners
-}
+import type { GameCallbacks, GameEngine, GameHud } from "../types";
 
 type GameState = "playing" | "dead" | "paused" | "gameover";
 
@@ -85,8 +66,8 @@ function isTypingTarget(target: EventTarget | null): boolean {
 
 export function createAsteroids(
   canvas: HTMLCanvasElement,
-  callbacks: AsteroidsCallbacks,
-): AsteroidsEngine {
+  callbacks: GameCallbacks,
+): GameEngine {
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Asteroids: 2D canvas context not available");
   const ctx: CanvasRenderingContext2D = context;
@@ -437,7 +418,8 @@ export function createAsteroids(
   let powerUpSpawned = false;
   let killsSinceSpawn = 0;
 
-  let lastHud: AsteroidsHud | null = null;
+  let lastHud: GameHud | null = null;
+  let lastTripleShot = 0;
   let rafId: number | null = null;
   let lastTime: number | null = null;
   let destroyed = false;
@@ -603,21 +585,27 @@ export function createAsteroids(
 
   // ── HUD reporting ───────────────────────────────────────────────────────────
   function emitHud() {
-    const hud: AsteroidsHud = {
+    // Triple-shot seconds left, rounded to 0.1 s; shown as the "3X" extra while active.
+    const tripleShot = Math.max(0, Math.round(ship.tripleShot * 10) / 10);
+    const hud: GameHud = {
       score,
       lives: Math.max(lives, 0),
       level,
-      tripleShot: Math.max(0, Math.round(ship.tripleShot * 10) / 10),
+      extras:
+        tripleShot > 0
+          ? [{ label: "3X", value: `${tripleShot.toFixed(1)}s` }]
+          : [],
     };
     if (
       lastHud &&
       lastHud.score === hud.score &&
       lastHud.lives === hud.lives &&
       lastHud.level === hud.level &&
-      lastHud.tripleShot === hud.tripleShot
+      lastTripleShot === tripleShot
     )
       return;
     lastHud = hud;
+    lastTripleShot = tripleShot;
     callbacks.onHud(hud);
   }
 
