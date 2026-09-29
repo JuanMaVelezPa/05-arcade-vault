@@ -25,6 +25,7 @@ export interface GameEngine {
   restart(): void; // fresh run: score 0, starting lives, level 1
   destroy(): void; // cancels rAF and removes all listeners
   jumpToLevel?(level: number): void; // 1-based; keeps score and lives, resumes
+  setMuted?(muted: boolean): void; // true stops live sounds and blocks new ones
 }
 
 export type CreateGame = (

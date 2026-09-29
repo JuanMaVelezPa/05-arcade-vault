@@ -13,6 +13,7 @@ export interface GameEntry {
   ariaLabel: string; // canvas label, includes the controls
   controls: { keys: ControlKey[]; text: string }; // content of the notice
   levels?: number; // shows the pause-overlay level selector when set
+  sound?: boolean; // shows the HUD mute toggle when true
 }
 
 // Real canvas games by catalog id. Ids with no entry keep the simulated arena.
@@ -47,6 +48,7 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     height: 600,
     input: "pointer",
     levels: 5,
+    sound: true,
     ariaLabel:
       "Arkanoid game. Move the mouse, drag a finger, or use the left and right arrows to move the paddle. P pauses.",
     controls: {
