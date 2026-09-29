@@ -1,5 +1,6 @@
 import { createArkanoid } from "./arkanoid/engine";
 import { createAsteroids } from "./asteroids/engine";
+import { createSnake } from "./snake/engine";
 import { createTetris } from "./tetris/engine";
 import type { CreateGame } from "./types";
 
@@ -54,6 +55,18 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     controls: {
       keys: ["←", "→"],
       text: "Arkanoid is played with the mouse, a finger, or the arrow keys.",
+    },
+  },
+  snake: {
+    create: createSnake,
+    width: 800,
+    height: 600,
+    input: "keyboard",
+    levels: 5,
+    ariaLabel: "Snake game. Arrow keys or W, A, S, D turn the snake, P pauses.",
+    controls: {
+      keys: ["←", "↑", "→", "↓"],
+      text: "Snake is played with the arrow keys or W, A, S, D. Open this page on a computer to play.",
     },
   },
 };

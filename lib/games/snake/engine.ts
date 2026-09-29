@@ -28,13 +28,52 @@ const START_LIVES = 3;
 const FRUITS_PER_LEVEL = 10;
 const COMPLETION_BONUS = 500;
 const BLINK_MS = 600; // respawn freeze after a crash or a level change
-const FRUIT_SPRITES = 22;
 const MAX_TURNS = 2; // turns buffered per tick
 const MAX_DT = 50; // ms
 const MAX_SCORE = 10_000_000; // DB CHECK on scores.score
 
-const GREEN = "#00ff88";
-const MAGENTA = "#ff006e";
+// Neon palette — values mirror the tokens in app/globals.css.
+const GREEN = "#00ff88"; // --green
+const MAGENTA = "#ff006e"; // --magenta
+const LINE = "rgba(0, 245, 255, 0.18)"; // --line
+const HEAD = "#b3ffd9"; // a brighter --green
+const EYE = "#0a0a0f"; // --bg
+
+// ── Fruit sprites ─────────────────────────────────────────────────────────────
+// Middle pixel-art row of fruits.png (3790 × 442), mapped from
+// references/source-assets/snake-assets/sprites.js.
+const FRUITS_SRC = "/games/snake/fruits.png";
+const FRUIT_SIZE = 23; // px, the longer side of a fruit drawn in its cell
+const FRUIT_ATLAS: readonly {
+  name: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}[] = [
+  { name: "banana", x: 34, y: 136, w: 110, h: 160 },
+  { name: "orange", x: 186, y: 136, w: 150, h: 160 },
+  { name: "grape", x: 378, y: 136, w: 110, h: 160 },
+  { name: "garlic", x: 540, y: 136, w: 130, h: 160 },
+  { name: "eggplant", x: 712, y: 136, w: 130, h: 160 },
+  { name: "strawberry", x: 894, y: 136, w: 110, h: 160 },
+  { name: "cherry", x: 1066, y: 136, w: 110, h: 160 },
+  { name: "carrot", x: 1228, y: 136, w: 130, h: 160 },
+  { name: "mushroom", x: 1400, y: 136, w: 130, h: 160 },
+  { name: "broccoli", x: 1582, y: 136, w: 110, h: 160 },
+  { name: "watermelon", x: 1734, y: 136, w: 150, h: 160 },
+  { name: "pepper", x: 1906, y: 136, w: 150, h: 160 },
+  { name: "kiwi", x: 2068, y: 136, w: 170, h: 160 },
+  { name: "lemon", x: 2250, y: 136, w: 140, h: 160 },
+  { name: "peach", x: 2432, y: 136, w: 130, h: 160 },
+  { name: "peanut", x: 2604, y: 136, w: 130, h: 160 },
+  { name: "apple", x: 2786, y: 136, w: 110, h: 160 },
+  { name: "tomato", x: 2948, y: 136, w: 130, h: 160 },
+  { name: "berries", x: 3110, y: 136, w: 150, h: 160 },
+  { name: "grapes2", x: 3302, y: 136, w: 110, h: 160 },
+  { name: "pineapple", x: 3454, y: 136, w: 150, h: 160 },
+  { name: "melon", x: 3637, y: 136, w: 130, h: 160 },
+];
 
 const DIRS = {
   up: { x: 0, y: -1 },
@@ -170,12 +209,14 @@ export function createSnake(
   let fruitsEaten = 0; // on the current level
   let tickAcc = 0; // ms
   let blinkMs = 0; // respawn freeze left; the snake blinks and does not move
+  let crashFlash = false; // the head shows magenta during a post-crash blink
   let state: GameState = "playing";
   let stateBeforePause: GameState = "playing";
   let lastHud: GameHud | null = null;
   let rafId: number | null = null;
   let lastTime: number | null = null;
   let destroyed = false;
+  let fieldDirty = true; // level changed; redraw the cached background and walls
 
   // ── Game logic ──────────────────────────────────────────────────────────────
   function addScore(points: number) {
@@ -196,6 +237,7 @@ export function createSnake(
   function respawn() {
     resetSnake();
     blinkMs = BLINK_MS;
+    crashFlash = false;
   }
 
   // One fruit on a random free cell (not on the snake or a wall).
@@ -212,7 +254,7 @@ export function createSnake(
       return false;
     }
     const cell = free[Math.floor(Math.random() * free.length)];
-    fruit = { ...cell, sprite: Math.floor(Math.random() * FRUIT_SPRITES) };
+    fruit = { ...cell, sprite: Math.floor(Math.random() * FRUIT_ATLAS.length) };
     return true;
   }
 
@@ -220,6 +262,7 @@ export function createSnake(
   function loadLevel(n: number) {
     level = n;
     wallSet = new Set(LEVELS[n - 1].walls.map(([x, y]) => cellKey(x, y)));
+    fieldDirty = true;
     fruitsEaten = 0;
     respawn();
     placeFruit();
@@ -256,6 +299,7 @@ export function createSnake(
       return;
     }
     respawn();
+    crashFlash = true;
     if (!placeFruit()) levelCleared();
   }
 
@@ -308,32 +352,164 @@ export function createSnake(
 
   // ── Draw ────────────────────────────────────────────────────────────────────
   // No HUD or overlay text: score, lives, level, pause, and game over live in React.
-  function draw() {
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, W, H);
 
+  // The sheet loads in the background; fruits are circles until it is ready.
+  const fruitImg = new Image();
+  fruitImg.src = FRUITS_SRC;
+
+  // Same dark radial background as .game-arena in app/globals.css.
+  const background = ctx.createRadialGradient(
+    W / 2,
+    H / 2,
+    0,
+    W / 2,
+    H / 2,
+    Math.hypot(W / 2, H / 2) * 0.7,
+  );
+  background.addColorStop(0, "#0a0030");
+  background.addColorStop(1, "#000");
+
+  // Background, grid, and glowing walls only change with the level, so they
+  // are drawn to an offscreen layer instead of every frame.
+  const fieldLayer = canvas.ownerDocument.createElement("canvas");
+  fieldLayer.width = W;
+  fieldLayer.height = H;
+  const fieldCtx = fieldLayer.getContext("2d");
+
+  function drawField(c: CanvasRenderingContext2D) {
+    c.fillStyle = background;
+    c.fillRect(0, 0, W, H);
+
+    // Faint grid on the cell lines.
+    c.strokeStyle = LINE;
+    c.lineWidth = 1;
+    c.beginPath();
+    for (let x = 1; x < COLS; x++) {
+      c.moveTo(x * CELL + 0.5, 0);
+      c.lineTo(x * CELL + 0.5, H);
+    }
+    for (let y = 1; y < ROWS; y++) {
+      c.moveTo(0, y * CELL + 0.5);
+      c.lineTo(W, y * CELL + 0.5);
+    }
+    c.stroke();
+
+    // Walls: glowing magenta blocks with a top highlight and a darker core.
+    const walls = LEVELS[level - 1].walls;
+    c.save();
+    c.shadowColor = MAGENTA;
+    c.shadowBlur = 12;
+    c.fillStyle = MAGENTA;
+    for (const [x, y] of walls)
+      c.fillRect(x * CELL + 1, y * CELL + 1, CELL - 2, CELL - 2);
+    c.shadowBlur = 0;
+    c.fillStyle = "rgba(255, 255, 255, 0.4)";
+    for (const [x, y] of walls)
+      c.fillRect(x * CELL + 3, y * CELL + 3, CELL - 6, 3);
+    c.fillStyle = "rgba(0, 0, 0, 0.28)";
+    for (const [x, y] of walls)
+      c.fillRect(x * CELL + 7, y * CELL + 8, CELL - 14, CELL - 14);
+    c.restore();
+  }
+
+  function drawFruit(f: Fruit) {
+    const cx = f.x * CELL + CELL / 2;
+    const cy = f.y * CELL + CELL / 2;
+
+    if (fruitImg.complete && fruitImg.naturalWidth > 0) {
+      const s = FRUIT_ATLAS[f.sprite];
+      const scale = FRUIT_SIZE / Math.max(s.w, s.h);
+      const dw = s.w * scale;
+      const dh = s.h * scale;
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(
+        fruitImg,
+        s.x,
+        s.y,
+        s.w,
+        s.h,
+        cx - dw / 2,
+        cy - dh / 2,
+        dw,
+        dh,
+      );
+      ctx.restore();
+      return;
+    }
+
+    // Fallback until the sheet loads, or if it fails to.
+    ctx.save();
+    ctx.shadowColor = MAGENTA;
+    ctx.shadowBlur = 14;
     ctx.fillStyle = MAGENTA;
-    for (const [x, y] of LEVELS[level - 1].walls)
-      ctx.fillRect(x * CELL + 1, y * CELL + 1, CELL - 2, CELL - 2);
+    ctx.beginPath();
+    ctx.arc(cx, cy, CELL / 2 - 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
 
-    if (fruit) {
-      ctx.fillStyle = MAGENTA;
+  function segmentPath(s: Cell) {
+    ctx.roundRect(s.x * CELL + 2, s.y * CELL + 2, CELL - 4, CELL - 4, 6);
+  }
+
+  // Body: rounded green segments in one glowing path. Head: brighter, with two
+  // eyes toward the current direction, or magenta during a post-crash blink.
+  function drawSnake() {
+    const [head, ...body] = snake;
+    ctx.save();
+    ctx.shadowColor = GREEN;
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = GREEN;
+    ctx.beginPath();
+    for (const s of body) segmentPath(s);
+    ctx.fill();
+
+    const headColor = crashFlash && blinkMs > 0 ? MAGENTA : HEAD;
+    ctx.shadowColor = headColor;
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = headColor;
+    ctx.beginPath();
+    segmentPath(head);
+    ctx.fill();
+
+    // Eyes sit ahead of the center, spread across the direction of travel.
+    const cx = head.x * CELL + CELL / 2;
+    const cy = head.y * CELL + CELL / 2;
+    const ahead = 4;
+    const spread = 5;
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = EYE;
+    for (const side of [-1, 1]) {
       ctx.beginPath();
       ctx.arc(
-        fruit.x * CELL + CELL / 2,
-        fruit.y * CELL + CELL / 2,
-        CELL / 2 - 4,
+        cx + dir.x * ahead + dir.y * spread * side,
+        cy + dir.y * ahead + dir.x * spread * side,
+        2.5,
         0,
         Math.PI * 2,
       );
       ctx.fill();
     }
+    ctx.restore();
+  }
+
+  function draw() {
+    if (fieldCtx) {
+      if (fieldDirty) {
+        drawField(fieldCtx);
+        fieldDirty = false;
+      }
+      ctx.drawImage(fieldLayer, 0, 0);
+    } else {
+      drawField(ctx);
+    }
+
+    if (fruit) drawFruit(fruit);
 
     // The snake blinks every 100 ms while it waits to move.
     if (blinkMs > 0 && Math.floor(blinkMs / 100) % 2 === 1) return;
-    ctx.fillStyle = GREEN;
-    for (const s of snake)
-      ctx.fillRect(s.x * CELL + 2, s.y * CELL + 2, CELL - 4, CELL - 4);
+    drawSnake();
   }
 
   // ── HUD reporting ───────────────────────────────────────────────────────────
