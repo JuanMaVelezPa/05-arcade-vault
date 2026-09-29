@@ -4,31 +4,59 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-**Arcade Vault** is a Next.js 16 (App Router) project for an online arcade platform where users play retro-style games and compete on score leaderboards. The `app/` directory is currently the untouched `create-next-app` scaffold (default `page.tsx`, Geist fonts, Tailwind v4) — no real screens or logic have been built yet. The actual product spec lives in `resources/resources/templates/` as a static HTML/React prototype (see below); treat that as the design/behavior reference to implement against, not as code to reuse directly.
+**Arcade Vault** is a Next.js 16 (App Router, React 19) online arcade where users play retro-style canvas games and compete on per-game score leaderboards. Data lives in Supabase; the contact form sends email through Resend.
 
-This is not yet a git repository.
+Built so far (see `specs/01`–`10`): home landing, games browser, game detail with leaderboard, player page with HUD and score submission, Hall of Fame, About page with contact form, and three real games (Asteroids, Tetris, Arkanoid) plus a global sound mute toggle.
 
-There is no test runner configured in `package.json` yet.
+The original design prototype lives in `references/templates/` (static HTML/JSX + `styles.css`). Treat it as the visual/behavior reference, not code to reuse. `references/started-games/` holds standalone reference games to port into the app (see the `add-arcade-game` skill).
+
+There is no test runner. QA is done manually in the browser (Playwright MCP); save screenshots to `.playwright-screenshots/`.
+
+## Commands
+
+```bash
+npm run dev           # dev server (Turbopack)
+npm run build         # production build
+npm run start         # run production build
+npm run lint          # ESLint
+npm run format        # Prettier write
+npm run format:check  # Prettier check
+```
+
+## Environment
+
+All local secrets live in `.env.local` (gitignored by `.env*`). `.env.example` lists the required keys:
+
+- `RESEND_API_KEY` — used by `app/api/contact/route.ts`.
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — read by `lib/supabase/env.ts` (referenced literally so Next.js inlines them in browser code).
 
 ## Spec-driven workflow
 
-Per `README.md`, this project follows a spec-driven design workflow using `/spec` and `/spec-impl` commands from the `Klerith/fernando-skills` skill package:
+Features follow the `/spec` and `/spec-impl` skills (`Klerith/fernando-skills`, installed in `~/.claude/skills/`):
 
-```bash
-npx skills@latest add Klerith/fernando-skills
-```
+- `/spec` writes `specs/NN-slug.md` (State, Depends on, Objective, Scope, Decisions, acceptance criteria). Wait for approval before implementing.
+- `/spec-impl` implements an approved spec on a `spec-NN-slug` branch (`specs/.spec-config.yml` → `AutoCreateBranch: true`), then marks the spec `Implemented`.
+- Keep specs to a narrow slice with sensible defaults; record defaults in the Decisions section instead of asking broad scope questions.
 
-These skills are not currently installed in this environment. If asked to implement a feature and this workflow is in use, check whether `/spec` / `/spec-impl` are available before free-styling an implementation approach.
+To add a new game from `references/started-games/<folder>`, use the project skill `/add-arcade-game <folder>` (`.claude/skills/add-arcade-game/`). It writes the spec, ports the engine, registers it, adds cover art, inserts and publishes the `games` row, and runs QA.
 
 ## Styles
-Use always /frontend-design to make user interfaces
+
+Always use `/frontend-design` to build user interfaces.
 
 ## Architecture
 
-- **App Router**: everything lives under `app/`. `app/layout.tsx` is the root layout (Geist Sans/Mono via `next/font/google`, wraps `<body>` in a flex column). `app/globals.css` defines Tailwind v4 theme tokens (`--background`, `--foreground`) via `@theme inline` and a `prefers-color-scheme: dark` override — there is no separate `tailwind.config`, theme customization happens in this CSS file.
+- **Routes** (`app/`): `/` (home landing), `/games` (browser with category filter), `/game/[id]` (detail + top scores), `/player/[id]` (play), `/hall-of-fame` (per-game champions), `/about` (contact form). API routes: `app/api/contact` (Resend), `app/api/health/supabase` (connectivity check). `app/error.tsx` is the error boundary.
+- **Server data** (`lib/data.ts`, `server-only`): `getGames`, `getGame`, `getTopScores`, `getChampions`. Queries only return rows with `is_published = true`. Maps DB rows to the UI types in `lib/types.ts` (`games.tagline` → `short`, `games.description` → `long`).
+- **Score submission**: server action `app/actions/scores.ts` (`submitScore`). It re-validates input (player name `^[A-Z0-9_ ]{1,10}$`, integer score 0..10,000,000) because server actions accept direct POSTs, then revalidates `/game/[id]` and `/hall-of-fame`.
+- **Supabase** (`lib/supabase/`): `server.ts` creates a new `@supabase/ssr` client per request (never cache at module level); `client.ts` is the browser client; `proxy.ts` + root `proxy.ts` refresh the session (Next 16 renamed `middleware` to `proxy`). `database.types.ts` is generated — regenerate it with the Supabase MCP `generate_typescript_types` after schema changes.
+- **Database** (`supabase/migrations/`): tables `games` (text id, category, cover CSS class, color, `sort_order`, `is_published`) and `scores`; views `game_stats` (best, plays) and `game_champions`. RLS: public select, anon insert limited to `game_id, player_name, score`; DB CHECK constraints mirror the server action rules. Apply new migrations as numbered files (`000N_*.sql`) through the Supabase MCP (`.mcp.json`).
+- **Games** (`lib/games/`): each engine is framework-free TypeScript implementing the contract in `types.ts` (`CreateGame(canvas, callbacks) → GameEngine` with pause/resume/end/restart/destroy, optional `jumpToLevel`, `setMuted`; callbacks `onHud`, `onGameOver`, `onPauseChange`). `registry.ts` maps catalog ids to canvas size, input mode (`keyboard` shows a touch-only notice, `pointer` works on touch), controls text, optional `levels` and `sound`. Catalog ids without a registry entry fall back to the simulated arena in `components/GamePlayer.tsx`.
+- **Components**: `GamePlayer` (HUD, pause overlay, level selector, mute toggle, GAME OVER modal with initials), `games/GameCanvas` (mounts the engine, detects input mode), `GamesBrowser`, `GameCard`, `HomeLanding`, `Nav`.
+- **Sound preference**: `lib/sound-pref.ts` stores mute state in `localStorage` (`arcade-vault:muted:v1`) with an in-memory fallback, exposed via `useSyncExternalStore`.
+- **Styling**: Tailwind CSS v4 via `@tailwindcss/postcss`; no `tailwind.config`. `app/globals.css` holds the neon theme tokens (`--bg`, `--ink`, `--cyan`, `--magenta`, ...) mapped into `@theme inline`, plus the ported prototype classes (`.av-bg`, `.btn`, `.hud-*`, `cover-*`). Fonts are self-hosted in `public/fonts/` via `next/font/local` (Press Start 2P, JetBrains Mono, Courier Prime).
 - **Path alias**: `@/*` maps to the project root (`tsconfig.json`).
-- **Styling**: Tailwind CSS v4 via `@tailwindcss/postcss` (see `postcss.config.mjs`); no CSS-in-JS.
-- **Formatting/linting**: Prettier (defaults, `.prettierrc.json`) + ESLint (`eslint-config-prettier` appended last in `eslint.config.mjs`). A project `PostToolUse` hook on `Write` (`.claude/settings.json` → `.claude/hooks/format-and-lint.mjs`) runs Prettier on every file Claude creates and `eslint --fix` on JS/TS; remaining ESLint errors are fed back (exit 2) and must be fixed. Manual: `npm run format`, `npm run format:check`, `npm run lint`.
+- **Formatting/linting**: Prettier (defaults, `.prettierrc.json`) + ESLint (`eslint-config-prettier` last in `eslint.config.mjs`). A `PostToolUse` hook on `Write|Edit` (`.claude/settings.json` → `.claude/hooks/format-and-lint.mjs`) runs Prettier on the whole touched file and `eslint --fix` on JS/TS; remaining ESLint errors are fed back (exit 2) and must be fixed.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
