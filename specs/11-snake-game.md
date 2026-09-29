@@ -1,6 +1,6 @@
 # 11 — SNAKE Game
 
-**State:** Approved
+**State:** Implemented
 **Depends on:** 05-asteroids-game, 06-games-and-scores-tables, 07-published-games-only, 09-arkanoid-game
 **Date:** 2026-09-29
 
@@ -21,9 +21,9 @@ Unlike specs 05, 08, and 09, there is no reference game to port. The only source
   - one fruit is on the board at a time, on a random free cell (not on the snake or on an obstacle). Its sprite is picked at random from the 22 atlas fruits;
   - eating a fruit grows the snake by 1 segment and adds `10 × level` points;
   - hitting the border, an obstacle, or its own body costs one life;
-  - after a crash with lives left, the snake respawns at the start position with length 4 on the same level, and the level's fruit count is kept. The snake blinks for 600 ms before it moves again;
+  - after a crash with lives left, the snake respawns at the start position on the same level and **keeps its length** until GAME OVER. All its segments start coiled on the start cell `(8, 12)` heading right, and the body unrolls behind the head as it moves. The level's fruit count is kept. The snake blinks for 600 ms before it moves again;
   - 3 lives. Losing the last life ends the run;
-  - eating 10 fruits on a level loads the next level. The snake resets to the start position with length 4 and the same 600 ms blink;
+  - eating 10 fruits on a level loads the next level. The snake **keeps its length** and respawns coiled on the start cell with the same 600 ms blink, so each level starts 10 segments longer: 4, 14, 24, 34, and 44 on levels 1–5;
   - eating the 10th fruit on level 5 adds a completion bonus of 500 points and ends the run.
 - Five levels, each with its own obstacle layout and tick length. Coordinates are in cells:
 
@@ -51,7 +51,7 @@ Unlike specs 05, 08, and 09, there is no reference game to port. The only source
 - The canvas draws no HUD and no overlay text. Score, lives (♥), and level go to the React HUD. Extra HUD stat: `FRUIT` with the value `n/10`, always shown.
 - Controls: ← ↑ → ↓ and W A S D turn. P and Escape pause. Auto-pause on a hidden tab and on window blur.
 - Registry `input: "keyboard"`. Touch-only viewports get the "KEYBOARD REQUIRED" notice.
-- Level selector: the registry entry sets `levels: 5`, and the engine implements `jumpToLevel(level)`. It loads that level's obstacles, resets the snake and the level's fruit count to 0, keeps the score and lives, and resumes (same behavior as ARKANOID).
+- Level selector: the registry entry sets `levels: 5`, and the engine implements `jumpToLevel(level)`. It loads that level's obstacles, sets the snake to that level's start length `4 + 10 × (level − 1)` (coiled on the start cell), resets the level's fruit count to 0, keeps the score and lives, and resumes (same behavior as ARKANOID).
 - A `snake` entry in `lib/games/registry.ts`.
 - New `cover-snake-arcade` cover art in `app/globals.css`. It is CSS-only, in the in-game style (green snake, magenta walls, a pixel fruit), and distinct from every existing cover, including `cover-snake`.
 - Migration `supabase/migrations/0005_snake_game.sql`. It inserts a new `games` row and publishes it:
@@ -128,38 +128,38 @@ HUD payload: `{ score, lives, level, extras: [{ label: "FRUIT", value: "n/10" }]
 
 ## Acceptance criteria
 
-- [ ] `/games` lists SNAKE with its `cover-snake-arcade` art and the `ARCADE` chip, linking to `/game/snake`.
-- [ ] `/game/snake` shows the new copy, Global Best `0`, Plays `NEW`, and `NO SCORES YET — BE THE FIRST` before any save.
-- [ ] `/player/snake` renders an 800 × 600 logical canvas filling the CRT screen, with the scanline overlay on top.
-- [ ] Arrow keys and WASD turn the snake, and pressing the opposite direction does not reverse it.
-- [ ] Fruits are drawn with sprites from `/games/snake/fruits.png`, and the network panel shows the image loaded with status 200.
-- [ ] Eating a fruit grows the snake by 1 and adds exactly `10 × level` points, and the `FRUIT` stat goes up by 1.
-- [ ] A new fruit never appears on the snake or on an obstacle.
-- [ ] Hitting the border, an obstacle, or the snake's own body costs 1 life and respawns the snake at the start after the blink.
-- [ ] Eating 10 fruits loads the next level's layout, the level goes up by 1, `FRUIT` resets to `0/10`, and the snake moves faster.
-- [ ] Each of the 5 levels shows the obstacle layout from the Scope table.
-- [ ] The React HUD shows the live score, the lives as ♥, the level, and `FRUIT n/10`. The canvas draws no HUD or overlay text.
-- [ ] PAUSE/RESUME, P, and Escape pause and resume the game, and the button label stays in sync.
-- [ ] Switching tabs leaves the game paused.
-- [ ] The pause overlay shows `JUMP TO LEVEL` with buttons 1–5, and the current level is highlighted.
-- [ ] Clicking a level button loads that level, resumes the game, and keeps the score and lives.
-- [ ] No mute toggle shows on `/player/snake`.
-- [ ] Losing the last life opens GAME OVER with the real final score.
-- [ ] Eating the 10th fruit on level 5 adds 500 points and opens GAME OVER with that score.
-- [ ] Pressing END opens GAME OVER with the real final score.
-- [ ] Typing initials in the modal (including W, A, S, D) does not control the game.
-- [ ] SAVE SCORE inserts a `scores` row with `game_id: "snake"`.
-- [ ] The saved score shows on `/game/snake`, on `/hall-of-fame?game=snake`, and as the SNAKE champion on `/hall-of-fame`.
-- [ ] PLAY AGAIN starts a fresh run with score 0, 3 lives, level 1, and `FRUIT 0/10`.
-- [ ] Arrow keys do not scroll the page.
-- [ ] Leaving the page stops the loop with no console errors.
-- [ ] A touch-only viewport shows the "KEYBOARD REQUIRED" notice.
-- [ ] `/player/asteroids`, `/player/tetris`, and `/player/arkanoid` still work.
-- [ ] The seeded `serpentina` row is still unpublished, and `cover-snake` is unchanged.
-- [ ] The migration file exists and is applied.
-- [ ] `get_advisors` (security) reports no new errors.
-- [ ] QA score rows are deleted.
-- [ ] `npm run build` and `npm run lint` complete with no errors.
+- [x] `/games` lists SNAKE with its `cover-snake-arcade` art and the `ARCADE` chip, linking to `/game/snake`.
+- [x] `/game/snake` shows the new copy, Global Best `0`, Plays `NEW`, and `NO SCORES YET — BE THE FIRST` before any save.
+- [x] `/player/snake` renders an 800 × 600 logical canvas filling the CRT screen, with the scanline overlay on top.
+- [x] Arrow keys and WASD turn the snake, and pressing the opposite direction does not reverse it.
+- [x] Fruits are drawn with sprites from `/games/snake/fruits.png`, and the network panel shows the image loaded with status 200.
+- [x] Eating a fruit grows the snake by 1 and adds exactly `10 × level` points, and the `FRUIT` stat goes up by 1.
+- [x] A new fruit never appears on the snake or on an obstacle.
+- [x] Hitting the border, an obstacle, or the snake's own body costs 1 life and respawns the snake at the start after the blink, with the same length it had before the crash.
+- [x] Eating 10 fruits loads the next level's layout, the level goes up by 1, `FRUIT` resets to `0/10`, the snake keeps its length, and the snake moves faster.
+- [x] Each of the 5 levels shows the obstacle layout from the Scope table.
+- [x] The React HUD shows the live score, the lives as ♥, the level, and `FRUIT n/10`. The canvas draws no HUD or overlay text.
+- [x] PAUSE/RESUME, P, and Escape pause and resume the game, and the button label stays in sync.
+- [x] Switching tabs leaves the game paused.
+- [x] The pause overlay shows `JUMP TO LEVEL` with buttons 1–5, and the current level is highlighted.
+- [x] Clicking a level button loads that level, resumes the game, keeps the score and lives, and sets the snake to length `4 + 10 × (level − 1)`.
+- [x] No mute toggle shows on `/player/snake`.
+- [x] Losing the last life opens GAME OVER with the real final score.
+- [x] Eating the 10th fruit on level 5 adds 500 points and opens GAME OVER with that score.
+- [x] Pressing END opens GAME OVER with the real final score.
+- [x] Typing initials in the modal (including W, A, S, D) does not control the game.
+- [x] SAVE SCORE inserts a `scores` row with `game_id: "snake"`.
+- [x] The saved score shows on `/game/snake`, on `/hall-of-fame?game=snake`, and as the SNAKE champion on `/hall-of-fame`.
+- [x] PLAY AGAIN starts a fresh run with score 0, 3 lives, level 1, and `FRUIT 0/10`.
+- [x] Arrow keys do not scroll the page.
+- [x] Leaving the page stops the loop with no console errors.
+- [x] A touch-only viewport shows the "KEYBOARD REQUIRED" notice.
+- [x] `/player/asteroids`, `/player/tetris`, and `/player/arkanoid` still work.
+- [x] The seeded `serpentina` row is still unpublished, and `cover-snake` is unchanged.
+- [x] The migration file exists and is applied.
+- [x] `get_advisors` (security) reports no new errors.
+- [x] QA score rows are deleted.
+- [x] `npm run build` and `npm run lint` complete with no errors.
 
 ## Decisions taken and discarded
 
@@ -177,7 +177,13 @@ HUD payload: `{ score, lives, level, extras: [{ label: "FRUIT", value: "n/10" }]
 - **No: swipe controls.** Explicit user decision. They would need `input: "pointer"` and gesture code.
 - **Yes (default): no sound.** The assets include no audio, so `sound` is not set and the mute toggle stays hidden.
 - **Yes (default): the level selector (`levels: 5`, `jumpToLevel`).** It reuses the spec 09 shell feature at no cost, and it makes QA of each layout quick.
-- **Yes (default): the snake resets to length 4 on respawn and on level change.** A long snake in a new layout could spawn into an unfair spot.
+- **Yes: the snake keeps its length after losing a life.** Explicit user decision (amended during implementation). Growth is only lost at GAME OVER.
+- **Yes (default): a long snake respawns coiled on the start cell.** A straight body to the left of `(8, 12)` only fits 9 cells; stacked segments always fit and unroll along the head's path.
+- **Yes: the snake keeps its length on level change.** Explicit user decision (amended during implementation). Each level adds 10 segments, so later levels are harder with a longer snake as well as a faster tick.
+- **Yes (default): a level jump sets the length to `4 + 10 × (level − 1)`.** That is the length a normal run has at the start of that level, so the selector cannot skip the difficulty.
+- **Yes (default): a level change also respawns the snake coiled on the start cell.** A 44-segment snake cannot be laid out straight.
+- **No: reset to length 4 on level change.** Replaced by the user decision above.
+- **No: reset to length 4 after a crash.** Replaced by the user decision above.
 - **Yes (default): the fruit count is kept after a crash.** A crash already costs a life, and losing the level's progress as well would be harsh.
 - **Yes (default): a 500-point completion bonus on level 5.** It rewards finishing over dying on the last level, and clearing level 5 ends the run as in ARKANOID.
 - **Yes (default): the middle pixel-art row of `fruits.png`.** It is the row mapped in `sprites.js`, and the pixel style fits the arcade look better than the photo row.

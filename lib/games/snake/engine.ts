@@ -233,11 +233,21 @@ export function createSnake(
     tickAcc = 0;
   }
 
-  // Fresh snake that blinks in place before it moves (crash or level change).
-  function respawn() {
-    resetSnake();
+  // Same length, heading right, with every segment coiled on the start cell.
+  // The body unrolls behind the head as it moves, so any length fits.
+  function coilSnake(length: number) {
+    snake = Array.from({ length }, () => ({ ...START }));
+    dir = DIRS.right;
+    turnQueue = [];
+    tickAcc = 0;
+  }
+
+  // Coiled snake of the given length that blinks in place before it moves
+  // (crash or level change). A crash also flashes the head magenta.
+  function respawn(length: number, crashed: boolean) {
+    coilSnake(length);
     blinkMs = BLINK_MS;
-    crashFlash = false;
+    crashFlash = crashed;
   }
 
   // One fruit on a random free cell (not on the snake or a wall).
@@ -258,22 +268,31 @@ export function createSnake(
     return true;
   }
 
-  // Walls, a fresh snake, and a fruit for level n. The fruit count starts at 0.
-  function loadLevel(n: number) {
+  // Walls, a respawned snake of the given length, and a fruit for level n.
+  // The fruit count starts at 0.
+  function loadLevel(n: number, length: number) {
     level = n;
     wallSet = new Set(LEVELS[n - 1].walls.map(([x, y]) => cellKey(x, y)));
     fieldDirty = true;
     fruitsEaten = 0;
-    respawn();
+    respawn(length, false);
     placeFruit();
   }
 
+  // The length a normal run has when level n starts: 4, 14, 24, 34, 44.
+  function levelStartLength(n: number): number {
+    return START_LENGTH + FRUITS_PER_LEVEL * (n - 1);
+  }
+
+  // A new run starts straight at length 4 and moves right away.
   function initGame() {
     score = 0;
     lives = START_LIVES;
     state = "playing";
-    loadLevel(1);
-    blinkMs = 0; // a new run starts moving right away
+    loadLevel(1, START_LENGTH);
+    resetSnake();
+    blinkMs = 0;
+    placeFruit();
   }
 
   function gameOver() {
@@ -285,12 +304,14 @@ export function createSnake(
 
   // Clearing level 5 adds the completion bonus and ends the run, as in ARKANOID.
   function levelCleared() {
-    if (level < LEVELS.length) return loadLevel(level + 1);
+    // The snake keeps its length, so each level starts 10 segments longer.
+    if (level < LEVELS.length) return loadLevel(level + 1, snake.length);
     addScore(COMPLETION_BONUS);
     gameOver();
   }
 
-  // One life down; with lives left the snake respawns and the fruit count stays.
+  // One life down; with lives left the snake respawns at the start with the
+  // same length, and the fruit count stays.
   function crash() {
     lives--;
     if (lives <= 0) {
@@ -298,8 +319,8 @@ export function createSnake(
       gameOver();
       return;
     }
-    respawn();
-    crashFlash = true;
+    // The snake keeps its length until GAME OVER.
+    respawn(snake.length, true);
     if (!placeFruit()) levelCleared();
   }
 
@@ -623,7 +644,7 @@ export function createSnake(
     jumpToLevel(n: number) {
       if (destroyed || state === "gameover") return;
       if (!Number.isInteger(n) || n < 1 || n > LEVELS.length) return;
-      loadLevel(n);
+      loadLevel(n, levelStartLength(n));
       emitHud();
       resume();
     },
