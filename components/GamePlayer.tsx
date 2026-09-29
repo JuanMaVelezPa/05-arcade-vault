@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useEffectEvent, useRef, useState, useTransition } from "react";
 import { submitScore } from "@/app/actions/scores";
 import GameCanvas, { type GameHandle } from "@/components/games/GameCanvas";
 import { GAME_REGISTRY, type GameEntry } from "@/lib/games/registry";
 import type { GameHud, HudExtra } from "@/lib/games/types";
+import { useMuted } from "@/lib/sound-pref";
 import type { Game } from "@/lib/types";
 
 interface GamePlayerProps {
@@ -31,6 +32,9 @@ export default function GamePlayer({ game }: GamePlayerProps) {
   const [saving, startSaving] = useTransition();
   const [saveError, setSaveError] = useState<string | null>(null);
   const [extras, setExtras] = useState<HudExtra[]>([]);
+  // Global, per-device preference; the toggle and M key only exist for games with sound.
+  const [muted, setMuted] = useMuted();
+  const hasSound = entry?.sound === true;
 
   useEffect(() => {
     if (isReal || over || paused) return;
@@ -42,6 +46,20 @@ export default function GamePlayer({ game }: GamePlayerProps) {
     }, 220);
     return () => clearInterval(t);
   }, [isReal, over, paused]);
+
+  // M toggles mute while playing or paused; never while the GAME OVER modal is open or typing.
+  const toggleMute = useEffectEvent(() => setMuted(!muted));
+  useEffect(() => {
+    if (!hasSound || over) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code !== "KeyM" || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target;
+      if (t instanceof HTMLElement && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName))) return;
+      toggleMute();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [hasSound, over]);
 
   // Real games: the engine owns pause and game over; React mirrors it via callbacks.
   const handleHud = (hud: GameHud) => {
@@ -124,6 +142,19 @@ export default function GamePlayer({ game }: GamePlayerProps) {
           ))}
         </div>
         <div className="hud-actions">
+          {hasSound && (
+            <button
+              type="button"
+              className={`btn sound-toggle${muted ? " off" : ""}`}
+              aria-pressed={muted}
+              aria-label="Mute sound"
+              title="Mute sound (M)"
+              onClick={() => setMuted(!muted)}
+            >
+              <span className="sound-led" aria-hidden="true"></span>
+              {muted ? "SOUND OFF" : "SOUND ON"}
+            </button>
+          )}
           <button type="button" className="btn yellow" onClick={togglePause}>
             {paused ? "RESUME" : "PAUSE"}
           </button>
@@ -142,6 +173,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
             <GameCanvas
               entry={entry}
               ref={gameRef}
+              muted={muted}
               onHud={handleHud}
               onGameOver={handleGameOver}
               onPauseChange={setPaused}

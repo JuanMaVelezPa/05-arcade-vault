@@ -208,9 +208,10 @@ export function createArkanoid(
   const bounceSound = new Audio(BOUNCE_SRC);
   const breakSound = new Audio(BREAK_SRC);
   const playing = new Set<HTMLAudioElement>();
+  let muted = false; // set by the shell through setMuted
 
   function play(sound: HTMLAudioElement) {
-    if (state !== "playing") return;
+    if (state !== "playing" || muted) return;
     const clone = sound.cloneNode() as HTMLAudioElement;
     playing.add(clone);
     clone.addEventListener("ended", () => playing.delete(clone));
@@ -591,6 +592,10 @@ export function createArkanoid(
       loadLevel(n);
       emitHud();
       resume();
+    },
+    setMuted(m: boolean) {
+      muted = m;
+      if (muted) stopSounds();
     },
     destroy() {
       destroyed = true;

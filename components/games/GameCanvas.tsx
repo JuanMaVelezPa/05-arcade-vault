@@ -22,6 +22,7 @@ export interface GameHandle {
 interface GameCanvasProps {
   entry: GameEntry;
   ref?: Ref<GameHandle>;
+  muted: boolean;
   onHud: (hud: GameHud) => void;
   onGameOver: (finalScore: number) => void;
   onPauseChange: (paused: boolean) => void;
@@ -56,6 +57,7 @@ function getServerInputMode(): InputMode {
 export default function GameCanvas({
   entry,
   ref,
+  muted,
   onHud,
   onGameOver,
   onPauseChange,
@@ -75,6 +77,7 @@ export default function GameCanvas({
   const handleHud = useEffectEvent((hud: GameHud) => onHud(hud));
   const handleGameOver = useEffectEvent((score: number) => onGameOver(score));
   const handlePauseChange = useEffectEvent((p: boolean) => onPauseChange(p));
+  const getMuted = useEffectEvent(() => muted);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -84,12 +87,18 @@ export default function GameCanvas({
       onGameOver: (score) => handleGameOver(score),
       onPauseChange: (p) => handlePauseChange(p),
     });
+    // Every new engine starts with the current preference, not only on changes.
+    engine.setMuted?.(getMuted());
     engineRef.current = engine;
     return () => {
       engine.destroy();
       engineRef.current = null;
     };
   }, [mode, blocked, create]);
+
+  useEffect(() => {
+    engineRef.current?.setMuted?.(muted);
+  }, [muted]);
 
   useImperativeHandle(
     ref,
