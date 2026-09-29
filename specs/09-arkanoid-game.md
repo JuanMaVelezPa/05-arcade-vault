@@ -117,36 +117,36 @@ HUD payload: `{ score, lives, level }`.
 
 ## Acceptance criteria
 
-- [ ] `/games` lists ARKANOID with its `cover-arkanoid` art and the `ARCADE` chip, linking to `/game/arkanoid`.
-- [ ] `/game/arkanoid` shows the new copy, Global Best `0`, Plays `NEW`, and `NO SCORES YET — BE THE FIRST` before any save.
-- [ ] `/player/arkanoid` renders an 800 × 600 logical canvas filling the CRT screen, with the scanline overlay on top.
-- [ ] Moving the mouse over the canvas moves the paddle, and so do ↝ and →. The paddle stays inside the field.
-- [ ] The ball bounces off the walls and the paddle.
-- [ ] Breaking a brick removes it, plays the break animation, and adds exactly 10 points.
-- [ ] Bounces and breaks play their sounds, and no sound plays while paused.
-- [ ] Clearing all bricks loads the next level's pattern, the level goes up by 1, and the ball is faster.
+- [x] `/games` lists ARKANOID with its `cover-arkanoid` art and the `ARCADE` chip, linking to `/game/arkanoid`.
+- [x] `/game/arkanoid` shows the new copy, Global Best `0`, Plays `NEW`, and `NO SCORES YET — BE THE FIRST` before any save.
+- [x] `/player/arkanoid` renders an 800 × 600 logical canvas filling the CRT screen, with the scanline overlay on top.
+- [x] Moving the mouse over the canvas moves the paddle, and so do ↝ and →. The paddle stays inside the field.
+- [x] The ball bounces off the walls and the paddle.
+- [x] Breaking a brick removes it, plays the break animation, and adds exactly 10 points.
+- [x] Bounces and breaks play their sounds, and no sound plays while paused.
+- [x] Clearing all bricks loads the next level's pattern, the level goes up by 1, and the ball is faster.
 - [ ] Losing the ball takes one life and relaunches the ball from the paddle.
-- [ ] The React HUD shows the live score, the lives as ♥, and the level. The canvas draws no HUD or overlay text.
-- [ ] PAUSE/RESUME, P, and Escape pause and resume the game, and the button label stays in sync.
-- [ ] Switching tabs leaves the game paused.
-- [ ] The pause overlay shows `JUMP TO LEVEL` with buttons 1–5, and the current level is highlighted.
-- [ ] Clicking a level button loads that level, resumes the game, and keeps the score and lives.
-- [ ] The pause overlays of `/player/asteroids` and `/player/tetris` show no level buttons.
-- [ ] Losing the last life opens GAME OVER with the real final score.
-- [ ] Clearing level 5 opens GAME OVER with the real final score.
-- [ ] Pressing END opens GAME OVER with the real final score.
-- [ ] Typing initials in the modal does not control the game.
-- [ ] SAVE SCORE inserts a `scores` row with `game_id: "arkanoid"`.
-- [ ] The saved score shows on `/game/arkanoid`, on `/hall-of-fame?game=arkanoid`, and as the ARKANOID champion on `/hall-of-fame`.
-- [ ] PLAY AGAIN starts a fresh run with level 1 bricks, score 0, 3 lives, and level 1.
-- [ ] Arrow keys do not scroll the page.
-- [ ] Leaving the page stops the loop with no console errors.
-- [ ] A touch-only viewport shows the canvas (no "KEYBOARD REQUIRED" notice), and a touch drag moves the paddle.
-- [ ] `/player/asteroids` and `/player/tetris` still work: movement, HUD, pause, END, and save.
-- [ ] The migration file exists and is applied.
-- [ ] `get_advisors` (security) reports no new errors.
-- [ ] QA score rows are deleted.
-- [ ] `npm run build` and `npm run lint` complete with no errors.
+- [x] The React HUD shows the live score, the lives as ♥, and the level. The canvas draws no HUD or overlay text.
+- [x] PAUSE/RESUME, P, and Escape pause and resume the game, and the button label stays in sync.
+- [x] Switching tabs leaves the game paused.
+- [x] The pause overlay shows `JUMP TO LEVEL` with buttons 1–5, and the current level is highlighted.
+- [x] Clicking a level button loads that level, resumes the game, and keeps the score and lives.
+- [x] The pause overlays of `/player/asteroids` and `/player/tetris` show no level buttons.
+- [x] Losing the last life opens GAME OVER with the real final score.
+- [x] Clearing level 5 opens GAME OVER with the real final score.
+- [x] Pressing END opens GAME OVER with the real final score.
+- [x] Typing initials in the modal does not control the game.
+- [x] SAVE SCORE inserts a `scores` row with `game_id: "arkanoid"`.
+- [x] The saved score shows on `/game/arkanoid`, on `/hall-of-fame?game=arkanoid`, and as the ARKANOID champion on `/hall-of-fame`.
+- [x] PLAY AGAIN starts a fresh run with level 1 bricks, score 0, 3 lives, and level 1.
+- [x] Arrow keys do not scroll the page.
+- [x] Leaving the page stops the loop with no console errors.
+- [x] A touch-only viewport shows the canvas (no "KEYBOARD REQUIRED" notice), and a touch drag moves the paddle.
+- [x] `/player/asteroids` and `/player/tetris` still work: movement, HUD, pause, END, and save.
+- [x] The migration file exists and is applied.
+- [x] `get_advisors` (security) reports no new errors.
+- [x] QA score rows are deleted.
+- [x] `npm run build` and `npm run lint` complete with no errors.
 
 ## Decisions taken and discarded
 
