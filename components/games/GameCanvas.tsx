@@ -16,6 +16,7 @@ export interface GameHandle {
   resume(): void;
   end(): void;
   restart(): void;
+  jumpToLevel?(level: number): void; // no-op when the engine has no levels
 }
 
 interface GameCanvasProps {
@@ -97,6 +98,7 @@ export default function GameCanvas({
       resume: () => engineRef.current?.resume(),
       end: () => engineRef.current?.end(),
       restart: () => engineRef.current?.restart(),
+      jumpToLevel: (level: number) => engineRef.current?.jumpToLevel?.(level),
     }),
     [],
   );
@@ -111,6 +113,8 @@ export default function GameCanvas({
       width={entry.width}
       height={entry.height}
       aria-label={entry.ariaLabel}
+      // Pointer games: a touch drag steers the game instead of scrolling the page.
+      style={needsKeyboard ? undefined : { touchAction: "none" }}
     />
   );
 }

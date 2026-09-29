@@ -60,6 +60,8 @@ export default function GamePlayer({ game }: GamePlayerProps) {
     if (paused) gameRef.current?.resume();
     else gameRef.current?.pause();
   };
+  // Engine loads the level's bricks and resumes; score and lives carry over.
+  const jumpToLevel = (n: number) => gameRef.current?.jumpToLevel?.(n);
   const endGame = () => {
     if (isReal) gameRef.current?.end();
     else setOver(true);
@@ -162,6 +164,25 @@ export default function GamePlayer({ game }: GamePlayerProps) {
                 <div className="mono" style={{ fontSize: 11, color: "var(--ink-dim)", marginTop: 10, letterSpacing: "0.16em" }}>
                   {isReal ? "PRESS P OR RESUME TO CONTINUE" : "PRESS RESUME TO CONTINUE"}
                 </div>
+                {entry?.levels && (
+                  <div className="level-jump">
+                    <div className="level-jump-label">JUMP TO LEVEL</div>
+                    <div className="level-jump-buttons">
+                      {Array.from({ length: entry.levels }, (_, i) => i + 1).map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          className={`btn level-jump-btn${n === level ? " current" : ""}`}
+                          aria-label={`Jump to level ${n}`}
+                          aria-current={n === level ? "step" : undefined}
+                          onClick={() => jumpToLevel(n)}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

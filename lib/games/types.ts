@@ -24,6 +24,7 @@ export interface GameEngine {
   end(): void; // stops the run and fires onGameOver with the current score
   restart(): void; // fresh run: score 0, starting lives, level 1
   destroy(): void; // cancels rAF and removes all listeners
+  jumpToLevel?(level: number): void; // 1-based; keeps score and lives, resumes
 }
 
 export type CreateGame = (
