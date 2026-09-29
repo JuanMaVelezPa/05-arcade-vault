@@ -57,6 +57,21 @@ const EXPLOSION_STEPS = 4;
 const MAX_DT = 50; // ms
 const MAX_SCORE = 10_000_000; // DB CHECK on scores.score
 
+// Neon palette — values mirror the tokens in app/globals.css.
+// Brick colors by the reference's color names.
+const BRICK_COLORS: Record<BrickColor, string> = {
+  red: "#d97a3a", // --bronze
+  yellow: "#f5ff00", // --yellow
+  cyan: "#00f5ff", // --cyan
+  magenta: "#ff006e", // --magenta
+  hotpink: "#c7d0e0", // --silver
+  green: "#00ff88", // --green
+  gray: "#8a8fb5", // --ink-dim
+};
+const CYAN = "#00f5ff";
+const MAGENTA = "#ff006e";
+const INK = "#e6e9ff";
+
 const BOUNCE_SRC = "/games/arkanoid/ball-bounce.mp3";
 const BREAK_SRC = "/games/arkanoid/break-sound.mp3";
 
@@ -185,6 +200,7 @@ export function createArkanoid(
   let rafId: number | null = null;
   let lastTime: number | null = null;
   let destroyed = false;
+  let bricksDirty = true; // bricks changed; redraw the cached brick layer
 
   // ── Sound ───────────────────────────────────────────────────────────────────
   // Each effect plays on a clone so overlapping hits don't cut each other off.
@@ -236,6 +252,7 @@ export function createArkanoid(
       alive: true,
     }));
     explosions = [];
+    bricksDirty = true;
     initBall();
   }
 
@@ -309,6 +326,7 @@ export function createArkanoid(
     for (const block of blocks) {
       if (!block.alive || !overlaps(ball, block)) continue;
       block.alive = false;
+      bricksDirty = true;
       explosions.push({
         x: block.x,
         y: block.y,
@@ -346,35 +364,115 @@ export function createArkanoid(
 
   // ── Draw ────────────────────────────────────────────────────────────────────
   // No HUD or overlay text: score, lives, level, pause, and game over live in React.
+
+  // Same dark radial background as .game-arena in app/globals.css.
+  const background = ctx.createRadialGradient(
+    W / 2,
+    H / 2,
+    0,
+    W / 2,
+    H / 2,
+    Math.hypot(W / 2, H / 2) * 0.7,
+  );
+  background.addColorStop(0, "#0a0030");
+  background.addColorStop(1, "#000");
+
+  // shadowBlur on up to 60 bricks per frame is expensive, so the bricks are
+  // drawn to an offscreen layer only when one breaks or a level loads.
+  const brickLayer = canvas.ownerDocument.createElement("canvas");
+  brickLayer.width = W;
+  brickLayer.height = H;
+  const brickCtx = brickLayer.getContext("2d");
+
+  // A lit neon brick: glowing fill, a top highlight strip, and a darker core.
+  function drawBrick(c: CanvasRenderingContext2D, b: Block) {
+    const color = BRICK_COLORS[b.color];
+    c.save();
+    c.shadowColor = color;
+    c.shadowBlur = 10;
+    c.fillStyle = color;
+    c.fillRect(b.x + 2, b.y + 2, b.w - 4, b.h - 4);
+    c.shadowBlur = 0;
+    c.fillStyle = "rgba(255, 255, 255, 0.4)";
+    c.fillRect(b.x + 2, b.y + 2, b.w - 4, 3);
+    c.fillStyle = "rgba(0, 0, 0, 0.28)";
+    c.fillRect(b.x + 8, b.y + 8, b.w - 16, b.h - 14);
+    c.restore();
+  }
+
+  function drawBrickLayer() {
+    if (!brickCtx) return;
+    brickCtx.clearRect(0, 0, W, H);
+    for (const b of blocks) if (b.alive) drawBrick(brickCtx, b);
+    bricksDirty = false;
+  }
+
+  // Break animation: an outline in the brick's color that grows and fades
+  // over EXPLOSION_STEPS discrete steps, like the reference's 4 sprite frames.
+  function drawExplosion(exp: Explosion) {
+    const step = Math.min(
+      Math.floor((exp.elapsed / EXPLOSION_DURATION) * EXPLOSION_STEPS),
+      EXPLOSION_STEPS - 1,
+    );
+    const grow = 2 + step * 3;
+    const color = BRICK_COLORS[exp.color];
+    ctx.save();
+    ctx.globalAlpha = 1 - step / EXPLOSION_STEPS;
+    ctx.strokeStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(
+      exp.x + 2 - grow,
+      exp.y + 2 - grow,
+      exp.w - 4 + grow * 2,
+      exp.h - 4 + grow * 2,
+    );
+    ctx.restore();
+  }
+
+  // Paddle: a glowing cyan bar with magenta end caps.
+  function drawPaddle() {
+    const cap = 10;
+    ctx.save();
+    ctx.shadowColor = CYAN;
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = CYAN;
+    ctx.fillRect(paddle.x + cap, paddle.y, paddle.w - cap * 2, paddle.h);
+    ctx.shadowColor = MAGENTA;
+    ctx.fillStyle = MAGENTA;
+    ctx.fillRect(paddle.x, paddle.y, cap, paddle.h);
+    ctx.fillRect(paddle.x + paddle.w - cap, paddle.y, cap, paddle.h);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+    ctx.fillRect(paddle.x + 2, paddle.y + 2, paddle.w - 4, 2);
+    ctx.restore();
+  }
+
+  // Ball: a bright ink core with a cyan glow.
+  function drawBall() {
+    const r = ball.w / 2;
+    ctx.save();
+    ctx.shadowColor = CYAN;
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = INK;
+    ctx.beginPath();
+    ctx.arc(ball.x + r, ball.y + r, r - 1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   function draw() {
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = background;
     ctx.fillRect(0, 0, W, H);
 
-    for (const block of blocks) {
-      if (!block.alive) continue;
-      ctx.fillStyle = block.color;
-      ctx.fillRect(block.x + 1, block.y + 1, block.w - 2, block.h - 2);
-    }
+    if (bricksDirty) drawBrickLayer();
+    if (brickCtx) ctx.drawImage(brickLayer, 0, 0);
+    else for (const b of blocks) if (b.alive) drawBrick(ctx, b);
 
-    for (const exp of explosions) {
-      const step = Math.min(
-        Math.floor((exp.elapsed / EXPLOSION_DURATION) * EXPLOSION_STEPS),
-        EXPLOSION_STEPS - 1,
-      );
-      ctx.strokeStyle = exp.color;
-      ctx.globalAlpha = 1 - step / EXPLOSION_STEPS;
-      ctx.strokeRect(
-        exp.x - step * 2,
-        exp.y - step * 2,
-        exp.w + step * 4,
-        exp.h + step * 4,
-      );
-      ctx.globalAlpha = 1;
-    }
-
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
-    ctx.fillRect(ball.x, ball.y, ball.w, ball.h);
+    for (const exp of explosions) drawExplosion(exp);
+    drawPaddle();
+    drawBall();
   }
 
   // ── HUD reporting ───────────────────────────────────────────────────────────

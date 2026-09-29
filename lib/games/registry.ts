@@ -1,3 +1,4 @@
+import { createArkanoid } from "./arkanoid/engine";
 import { createAsteroids } from "./asteroids/engine";
 import { createTetris } from "./tetris/engine";
 import type { CreateGame } from "./types";
@@ -38,6 +39,19 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     controls: {
       keys: ["←", "→", "↑", "↓", "SPACE"],
       text: "Tetris is played with the arrow keys and Space. Open this page on a computer to play.",
+    },
+  },
+  arkanoid: {
+    create: createArkanoid,
+    width: 800,
+    height: 600,
+    input: "pointer",
+    levels: 5,
+    ariaLabel:
+      "Arkanoid game. Move the mouse, drag a finger, or use the left and right arrows to move the paddle. P pauses.",
+    controls: {
+      keys: ["←", "→"],
+      text: "Arkanoid is played with the mouse, a finger, or the arrow keys.",
     },
   },
 };
