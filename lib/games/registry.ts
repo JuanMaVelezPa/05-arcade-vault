@@ -11,6 +11,7 @@ export interface GameEntry {
   input: "keyboard" | "pointer"; // "keyboard" shows the touch-only notice
   ariaLabel: string; // canvas label, includes the controls
   controls: { keys: ControlKey[]; text: string }; // content of the notice
+  levels?: number; // shows the pause-overlay level selector when set
 }
 
 // Real canvas games by catalog id. Ids with no entry keep the simulated arena.
