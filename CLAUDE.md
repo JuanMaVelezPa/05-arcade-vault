@@ -42,6 +42,8 @@ Features follow the `/spec` and `/spec-impl` skills (`Klerith/fernando-skills`, 
 
 To add a new game from `references/started-games/<folder>`, use the project skill `/add-arcade-game <folder>` (`.claude/skills/add-arcade-game/`). It writes the spec, ports the engine, registers it, adds cover art, inserts and publishes the `games` row, and runs QA.
 
+To decide which game to add next, ask the project agent `@game-planner` (`.claude/agents/game-planner.md`). It ranks candidates against the catalog and logs every suggestion and its status in `references/game-suggestions-todo.md`; its pick then feeds `/add-arcade-game`.
+
 ## Styles
 
 Always use `/frontend-design` to build user interfaces.
