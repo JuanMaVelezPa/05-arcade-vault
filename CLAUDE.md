@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Arcade Vault** is a Next.js 16 (App Router, React 19) online arcade where users play retro-style canvas games and compete on per-game score leaderboards. Data lives in Supabase; the contact form sends email through Resend.
 
-Built so far (see `specs/01`–`10`): home landing, games browser, game detail with leaderboard, player page with HUD and score submission, Hall of Fame, About page with contact form, and three real games (Asteroids, Tetris, Arkanoid) plus a global sound mute toggle.
+Built so far (see `specs/01`–`11`): home landing, games browser, game detail with leaderboard, player page with HUD and score submission, Hall of Fame, About page with contact form, and four real games (Asteroids, Tetris, Arkanoid, Snake) plus a global sound mute toggle.
+
+`references/implemented-games.md` lists the published games (id, title, category, short description, color). Keep it in sync with the `games` table when a game is added or removed.
 
 The original design prototype lives in `references/templates/` (static HTML/JSX + `styles.css`). Treat it as the visual/behavior reference, not code to reuse. `references/started-games/` holds standalone reference games to port into the app (see the `add-arcade-game` skill).
 
