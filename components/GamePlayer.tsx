@@ -8,11 +8,15 @@ import GameCanvas, { type GameHandle } from "@/components/games/GameCanvas";
 import { GAME_REGISTRY, type GameEntry } from "@/lib/games/registry";
 import type { GameHud, HudExtra } from "@/lib/games/types";
 import { useMuted } from "@/lib/sound-pref";
+import { useSkin } from "@/lib/skin-pref";
+import type { Skin } from "@/lib/games/types";
 import type { Game } from "@/lib/types";
 
 interface GamePlayerProps {
   game: Game;
 }
+
+const SKIN_OPTIONS: readonly Skin[] = ["neon", "classic", "retro"];
 
 export default function GamePlayer({ game }: GamePlayerProps) {
   const router = useRouter();
@@ -34,6 +38,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
   const [extras, setExtras] = useState<HudExtra[]>([]);
   // Global, per-device preference; the toggle and M key only exist for games with sound.
   const [muted, setMuted] = useMuted();
+  const [skin, setSkin] = useSkin();
   const hasSound = entry?.sound === true;
 
   useEffect(() => {
@@ -174,6 +179,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
               entry={entry}
               ref={gameRef}
               muted={muted}
+              skin={skin}
               onHud={handleHud}
               onGameOver={handleGameOver}
               onPauseChange={setPaused}
@@ -196,6 +202,25 @@ export default function GamePlayer({ game }: GamePlayerProps) {
                 <div className="mono" style={{ fontSize: 11, color: "var(--ink-dim)", marginTop: 10, letterSpacing: "0.16em" }}>
                   {isReal ? "PRESS P OR RESUME TO CONTINUE" : "PRESS RESUME TO CONTINUE"}
                 </div>
+                {entry?.skins && (
+                  <div className="skin-pick" role="radiogroup" aria-label="Skin">
+                    <div className="level-jump-label">SKIN</div>
+                    <div className="skin-pick-buttons">
+                      {SKIN_OPTIONS.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          role="radio"
+                          aria-checked={s === skin}
+                          className={`btn skin-pick-btn skin-${s}${s === skin ? " current" : ""}`}
+                          onClick={() => setSkin(s)}
+                        >
+                          {s.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {entry?.levels && (
                   <div className="level-jump">
                     <div className="level-jump-label">JUMP TO LEVEL</div>

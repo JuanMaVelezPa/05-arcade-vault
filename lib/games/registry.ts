@@ -15,6 +15,7 @@ export interface GameEntry {
   controls: { keys: ControlKey[]; text: string }; // content of the notice
   levels?: number; // shows the pause-overlay level selector when set
   sound?: boolean; // shows the HUD mute toggle when true
+  skins?: true; // shows the pause-overlay skin selector
 }
 
 // Real canvas games by catalog id. Ids with no entry keep the simulated arena.
@@ -63,6 +64,7 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     height: 600,
     input: "keyboard",
     levels: 5,
+    skins: true,
     ariaLabel: "Snake game. Arrow keys or W, A, S, D turn the snake, P pauses.",
     controls: {
       keys: ["←", "↑", "→", "↓"],

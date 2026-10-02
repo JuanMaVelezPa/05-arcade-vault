@@ -9,7 +9,7 @@ import {
   type Ref,
 } from "react";
 import type { ControlKey, GameEntry } from "@/lib/games/registry";
-import type { GameEngine, GameHud } from "@/lib/games/types";
+import type { GameEngine, GameHud, Skin } from "@/lib/games/types";
 
 export interface GameHandle {
   pause(): void;
@@ -23,6 +23,7 @@ interface GameCanvasProps {
   entry: GameEntry;
   ref?: Ref<GameHandle>;
   muted: boolean;
+  skin: Skin;
   onHud: (hud: GameHud) => void;
   onGameOver: (finalScore: number) => void;
   onPauseChange: (paused: boolean) => void;
@@ -58,6 +59,7 @@ export default function GameCanvas({
   entry,
   ref,
   muted,
+  skin,
   onHud,
   onGameOver,
   onPauseChange,
@@ -78,6 +80,7 @@ export default function GameCanvas({
   const handleGameOver = useEffectEvent((score: number) => onGameOver(score));
   const handlePauseChange = useEffectEvent((p: boolean) => onPauseChange(p));
   const getMuted = useEffectEvent(() => muted);
+  const getSkin = useEffectEvent(() => skin);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -89,6 +92,7 @@ export default function GameCanvas({
     });
     // Every new engine starts with the current preference, not only on changes.
     engine.setMuted?.(getMuted());
+    engine.setSkin?.(getSkin());
     engineRef.current = engine;
     return () => {
       engine.destroy();
@@ -99,6 +103,10 @@ export default function GameCanvas({
   useEffect(() => {
     engineRef.current?.setMuted?.(muted);
   }, [muted]);
+
+  useEffect(() => {
+    engineRef.current?.setSkin?.(skin);
+  }, [skin]);
 
   useImperativeHandle(
     ref,
