@@ -1,6 +1,6 @@
 # 13 — Game Skins (neon, classic, retro)
 
-**State:** Approved
+**State:** Implemented
 **Depends on:** 05-asteroids-game, 08-tetris-game, 09-arkanoid-game, 10-sound-mute-toggle, 11-snake-game
 **Date:** 2026-10-02
 
@@ -137,18 +137,18 @@ Neon values below equal what the engines draw today. Retro tones: Game Boy `#0f3
 
 ## Acceptance criteria
 
-- [ ] On a first visit (empty `localStorage`) every game renders with the neon look, unchanged from today.
-- [ ] The HUD bar of each of the four games shows a SKIN button reading NEON by default; each click moves to CLASSIC, then RETRO, then back to NEON, also while the game is running.
-- [ ] Selecting a skin repaints the canvas right away and keeps score, lives, level and board state.
-- [ ] The choice is written to `arcade-vault:skin:v1` and survives reload, PLAY AGAIN and navigation between games.
-- [ ] Setting the key to `"garbage"` loads neon, with no hydration warning.
-- [ ] Changing the skin in one tab updates a second open player tab.
-- [ ] `grep` for `#[0-9a-fA-F]{3,8}` and `rgba?\(` in each `engine.ts` finds no themed colors.
-- [ ] Each `skins.ts` exports `SKINS` with `neon`, `classic` and `retro`, and neon values match the tables above.
-- [ ] Classic and retro draw with `shadowBlur` 0 everywhere.
-- [ ] Retro uses only its 4 tones plus the scanline overlay.
-- [ ] Gameplay, pause, END, restart and score submission work in all three skins.
-- [ ] `npm run build` and `npm run lint` complete with no errors.
+- [x] On a first visit (empty `localStorage`) every game renders with the neon look, unchanged from today.
+- [x] The HUD bar of each of the four games shows a SKIN button reading NEON by default; each click moves to CLASSIC, then RETRO, then back to NEON, also while the game is running.
+- [x] Selecting a skin repaints the canvas right away and keeps score, lives, level and board state.
+- [x] The choice is written to `arcade-vault:skin:v1` and survives reload, PLAY AGAIN and navigation between games.
+- [x] Setting the key to `"garbage"` loads neon, with no hydration warning.
+- [x] Changing the skin in one tab updates a second open player tab.
+- [x] `grep` for `#[0-9a-fA-F]{3,8}` and `rgba?\(` in each `engine.ts` finds no themed colors.
+- [x] Each `skins.ts` exports `SKINS` with `neon`, `classic` and `retro`, and neon values match the tables above.
+- [x] Classic and retro draw with `shadowBlur` 0 everywhere.
+- [x] Retro uses only its 4 tones plus the scanline overlay.
+- [x] Gameplay, pause, END, restart and score submission work in all three skins.
+- [x] `npm run build` and `npm run lint` complete with no errors.
 
 ## Decisions taken and discarded
 
