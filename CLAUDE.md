@@ -44,6 +44,8 @@ To add a new game from `references/started-games/<folder>`, use the project skil
 
 To decide which game to add next, ask the project agent `@game-planner` (`.claude/agents/game-planner.md`). It ranks candidates against the catalog and logs every suggestion and its status in `references/game-suggestions-todo.md`; its pick then feeds `/add-arcade-game`.
 
+To compare two spec ideas for one game, use the project skill `/game-jam <idea>` (`.claude/skills/game-jam/`). It runs two `game-jam` agents (`.claude/agents/game-jam.md`) in parallel, writes `NN-<game-id>-option-a.md` and `NN-<game-id>-option-b.md` (NN = next spec number) in `specs/game-jam/<game-id>/`, then judges them and writes `NN-<game-id>-verdict.md`. Promote the winner to `specs/NN-slug.md` yourself.
+
 ## Styles
 
 Always use `/frontend-design` to build user interfaces.
