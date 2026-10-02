@@ -16,7 +16,9 @@ interface GamePlayerProps {
   game: Game;
 }
 
-const SKIN_OPTIONS: readonly Skin[] = ["neon", "classic", "retro"];
+const SKIN_ORDER: readonly Skin[] = ["neon", "classic", "retro"];
+const nextSkin = (s: Skin): Skin =>
+  SKIN_ORDER[(SKIN_ORDER.indexOf(s) + 1) % SKIN_ORDER.length];
 
 export default function GamePlayer({ game }: GamePlayerProps) {
   const router = useRouter();
@@ -160,6 +162,17 @@ export default function GamePlayer({ game }: GamePlayerProps) {
               {muted ? "SOUND OFF" : "SOUND ON"}
             </button>
           )}
+          {entry?.skins && (
+            <button
+              type="button"
+              className={`btn skin-toggle skin-${skin}`}
+              aria-label={`Change skin, current ${skin}`}
+              title="Change skin"
+              onClick={() => setSkin(nextSkin(skin))}
+            >
+              SKIN: {skin.toUpperCase()}
+            </button>
+          )}
           <button type="button" className="btn yellow" onClick={togglePause}>
             {paused ? "RESUME" : "PAUSE"}
           </button>
@@ -202,25 +215,6 @@ export default function GamePlayer({ game }: GamePlayerProps) {
                 <div className="mono" style={{ fontSize: 11, color: "var(--ink-dim)", marginTop: 10, letterSpacing: "0.16em" }}>
                   {isReal ? "PRESS P OR RESUME TO CONTINUE" : "PRESS RESUME TO CONTINUE"}
                 </div>
-                {entry?.skins && (
-                  <div className="skin-pick" role="radiogroup" aria-label="Skin">
-                    <div className="level-jump-label">SKIN</div>
-                    <div className="skin-pick-buttons">
-                      {SKIN_OPTIONS.map((s) => (
-                        <button
-                          key={s}
-                          type="button"
-                          role="radio"
-                          aria-checked={s === skin}
-                          className={`btn skin-pick-btn skin-${s}${s === skin ? " current" : ""}`}
-                          onClick={() => setSkin(s)}
-                        >
-                          {s.toUpperCase()}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 {entry?.levels && (
                   <div className="level-jump">
                     <div className="level-jump-label">JUMP TO LEVEL</div>

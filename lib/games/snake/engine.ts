@@ -3,6 +3,7 @@
 // All state lives inside createSnake().
 
 import type { GameCallbacks, GameEngine, GameHud, Skin } from "../types";
+import { drawScanlines } from "../scanlines";
 import { SKINS, type Palette } from "./skins";
 
 type GameState = "playing" | "paused" | "gameover";
@@ -211,6 +212,7 @@ export function createSnake(
   let lastTime: number | null = null;
   let destroyed = false;
   let palette: Palette = SKINS.neon;
+  let retro = false; // draws the CRT scanlines last
   let fieldDirty = true; // level changed; redraw the cached background and walls
 
   // ── Game logic ──────────────────────────────────────────────────────────────
@@ -531,8 +533,9 @@ export function createSnake(
     if (fruit) drawFruit(fruit);
 
     // The snake blinks every 100 ms while it waits to move.
-    if (blinkMs > 0 && Math.floor(blinkMs / 100) % 2 === 1) return;
-    drawSnake();
+    const hidden = blinkMs > 0 && Math.floor(blinkMs / 100) % 2 === 1;
+    if (!hidden) drawSnake();
+    if (retro) drawScanlines(ctx, W, H);
   }
 
   // ── HUD reporting ───────────────────────────────────────────────────────────
@@ -646,6 +649,7 @@ export function createSnake(
     setSkin(skin: Skin) {
       if (destroyed) return;
       palette = SKINS[skin];
+      retro = skin === "retro";
       background = makeBackground();
       fieldDirty = true; // cached background, grid and walls use the old colors
       draw(); // repaint now, also while paused

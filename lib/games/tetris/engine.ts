@@ -2,7 +2,9 @@
 // Framework-free: owns the canvas, the rAF loop, and its keyboard listeners.
 // All state lives inside createTetris() so several instances never share it.
 
-import type { GameCallbacks, GameEngine, GameHud } from "../types";
+import type { GameCallbacks, GameEngine, GameHud, Skin } from "../types";
+import { drawScanlines } from "../scanlines";
+import { SKINS, type Palette } from "./skins";
 
 type GameState = "playing" | "paused" | "gameover";
 
@@ -26,22 +28,6 @@ const H = ROWS * BLOCK; // 600
 const PREVIEW_SIZE = 4 * BLOCK;
 const PREVIEW_X = BOARD_W + (W - BOARD_W - PREVIEW_SIZE) / 2;
 const PREVIEW_Y = 30;
-
-// Neon palette — values mirror the tokens in app/globals.css.
-// Colors by piece index (1–8).
-const COLORS = [
-  "",
-  "#00f5ff", // I — --cyan
-  "#f5ff00", // O — --yellow
-  "#ff006e", // T — --magenta
-  "#00ff88", // S — --green
-  "#d97a3a", // Z — --bronze
-  "#c7d0e0", // J — --silver
-  "#ffcf3a", // L — --gold
-  "#8a8fb5", // N — --ink-dim, metallic like the reference's gray nut
-];
-const CYAN = "#00f5ff";
-const GRID_LINE = "rgba(0, 245, 255, 0.18)"; // --line
 
 const PIECES: number[][][] = [
   [],
@@ -171,6 +157,8 @@ export function createTetris(
   let rafId: number | null = null;
   let lastTime: number | null = null;
   let destroyed = false;
+  let palette: Palette = SKINS.neon;
+  let retro = false; // draws the CRT scanlines last
   let boardDirty = true; // locked cells changed; redraw the cached board layer
 
   function addScore(points: number) {
@@ -300,17 +288,22 @@ export function createTetris(
   // ── Draw ────────────────────────────────────────────────────────────────────
   // No HUD or overlay text: score, lines, level, and game over live in React.
 
-  // Same dark radial background as .game-arena in app/globals.css.
-  const background = ctx.createRadialGradient(
-    W / 2,
-    H / 2,
-    0,
-    W / 2,
-    H / 2,
-    Math.hypot(W / 2, H / 2) * 0.7,
-  );
-  background.addColorStop(0, "#0a0030");
-  background.addColorStop(1, "#000");
+  // Neon matches the dark radial background of .game-arena in app/globals.css.
+  // Flat skins have bg2 = bg, so the same gradient paints one color.
+  function makeBackground(): CanvasGradient {
+    const g = ctx.createRadialGradient(
+      W / 2,
+      H / 2,
+      0,
+      W / 2,
+      H / 2,
+      Math.hypot(W / 2, H / 2) * 0.7,
+    );
+    g.addColorStop(0, palette.bg);
+    g.addColorStop(1, palette.bg2);
+    return g;
+  }
+  let background = makeBackground();
 
   // Locked cells glow too, and shadowBlur on up to 200 cells per frame is
   // expensive, so they are drawn to an offscreen layer only when they change.
@@ -327,16 +320,16 @@ export function createTetris(
     colorIndex: number,
   ) {
     if (!colorIndex) return;
-    const color = COLORS[colorIndex];
+    const color = palette.pieces[colorIndex];
     c.save();
     c.shadowColor = color;
-    c.shadowBlur = 10;
+    c.shadowBlur = palette.glow ? 10 : 0;
     c.fillStyle = color;
     c.fillRect(px + 2, py + 2, BLOCK - 4, BLOCK - 4);
     c.shadowBlur = 0;
-    c.fillStyle = "rgba(255, 255, 255, 0.35)";
+    c.fillStyle = palette.cellHighlight;
     c.fillRect(px + 2, py + 2, BLOCK - 4, 3);
-    c.fillStyle = "rgba(0, 0, 0, 0.28)";
+    c.fillStyle = palette.cellShade;
     c.fillRect(px + 8, py + 9, BLOCK - 16, BLOCK - 16);
     c.restore();
   }
@@ -361,7 +354,7 @@ export function createTetris(
       for (let c = 0; c < shape[r].length; c++) {
         const v = shape[r][c];
         if (!v) continue;
-        ctx.strokeStyle = COLORS[v];
+        ctx.strokeStyle = palette.pieces[v];
         ctx.strokeRect(
           ox + c * BLOCK + 3.5,
           oy + r * BLOCK + 3.5,
@@ -374,7 +367,7 @@ export function createTetris(
 
   function drawGrid() {
     ctx.save();
-    ctx.strokeStyle = GRID_LINE;
+    ctx.strokeStyle = palette.grid;
     ctx.lineWidth = 0.5;
     ctx.beginPath();
     for (let c = 1; c < COLS; c++) {
@@ -401,9 +394,9 @@ export function createTetris(
   // Board edge and next-piece frame: thin cyan lines with a soft glow.
   function drawFrame() {
     ctx.save();
-    ctx.strokeStyle = "rgba(0, 245, 255, 0.55)";
-    ctx.shadowColor = CYAN;
-    ctx.shadowBlur = 12;
+    ctx.strokeStyle = palette.frame;
+    ctx.shadowColor = palette.frameGlow ?? "transparent";
+    ctx.shadowBlur = palette.frameGlow ? 12 : 0;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(BOARD_W + 0.75, 0);
@@ -451,6 +444,7 @@ export function createTetris(
     drawShape(ctx, current.shape, current.x * BLOCK, current.y * BLOCK);
 
     drawNext();
+    if (retro) drawScanlines(ctx, W, H);
   }
 
   // ── HUD reporting ───────────────────────────────────────────────────────────
@@ -566,6 +560,14 @@ export function createTetris(
       // The shell resets its HUD on PLAY AGAIN, so always send a fresh one.
       lastHud = null;
       emitHud();
+    },
+    setSkin(skin: Skin) {
+      if (destroyed) return;
+      palette = SKINS[skin];
+      retro = skin === "retro";
+      background = makeBackground();
+      boardDirty = true; // cached board layer uses the old colors
+      draw(); // repaint now, also while paused
     },
     destroy() {
       destroyed = true;

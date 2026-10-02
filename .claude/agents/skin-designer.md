@@ -61,7 +61,7 @@ Write a spec only when a game has a `Partial` or `Missing` skin. One spec per ru
   - a `Skin` type and an optional `setSkin?(skin)` on `GameEngine` in `lib/games/types.ts`
   - a `skins?: true` flag in `lib/games/registry.ts`
   - a skin preference in `localStorage` with an in-memory fallback, like `lib/sound-pref.ts`
-  - a skin selector in the `GamePlayer` pause overlay
+  - a SKIN button in the `GamePlayer` HUD action bar (next to PAUSE, END and EXIT, like the SOUND toggle) that cycles neon → classic → retro and works at any time, since the skin is a global preference. Never a pause-overlay selector.
 - For each failing game, include a palette table: element, neon hex, classic hex, retro hex. Neon hex values equal what the engine draws today.
 - Follow the `/spec` layout: Title (`# NN — Name`), `**State:** Draft`, `**Depends on:**`, `**Date:**` (from `date +%F`, never guess), `**Objective:**` in one sentence, Scope (in and out), Data model, Implementation plan, Acceptance criteria as `- [ ]` checks, Decisions taken and discarded, Identified risks, and a closing "not in this spec" list.
 - Use concrete hex values, not "dark" or "bright". Keep the slice narrow. All text in English.

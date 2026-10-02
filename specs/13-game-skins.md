@@ -4,7 +4,7 @@
 **Depends on:** 05-asteroids-game, 08-tetris-game, 09-arkanoid-game, 10-sound-mute-toggle, 11-snake-game
 **Date:** 2026-10-02
 
-**Objective:** Give Asteroids, Tetris, Arkanoid and Snake three selectable skins (neon default, classic, retro), chosen from the `GamePlayer` pause overlay and remembered in `localStorage`.
+**Objective:** Give Asteroids, Tetris, Arkanoid and Snake three selectable skins (neon default, classic, retro), chosen at any time from a SKIN button in the `GamePlayer` HUD bar (next to PAUSE, END and EXIT) and remembered in `localStorage`.
 
 **Numbering:** 12 is taken by the PONG game-jam drafts in `specs/game-jam/pong/`, which are not promoted yet, so this spec is 13.
 
@@ -20,7 +20,7 @@ The 2026-10-02 audit found no `lib/games/<id>/skins.ts` and no skin infrastructu
   - `Skin` type and optional `setSkin?(skin: Skin): void` on `GameEngine` in `lib/games/types.ts`.
   - `skins?: true` on `GameEntry` in `lib/games/registry.ts`, set on all four games.
   - `lib/skin-pref.ts`, same pattern as `lib/sound-pref.ts`: key `arcade-vault:skin:v1`, values `"neon" | "classic" | "retro"`, `useSyncExternalStore`, in-memory fallback, `storage` event sync. Missing or unknown value means `neon`.
-  - A NEON / CLASSIC / RETRO selector in the `GamePlayer` pause overlay, shown only when `entry.skins`. Styled with `/frontend-design`.
+  - A SKIN button in the `GamePlayer` HUD action bar, next to PAUSE, END and EXIT, shown only when `entry.skins`. One click cycles NEON → CLASSIC → RETRO. It shows the current skin name and a small palette chip, works while playing, paused or before the first input, and does not pause the game. Styled with `/frontend-design`.
   - `GameCanvas` takes a `skin` prop, calls `engine.setSkin?.(skin)` right after `create()` and on every change.
 - `lib/games/<id>/skins.ts` for each game, exporting `SKINS: Record<Skin, Palette>` with a full palette of every color the engine draws.
 - Each engine reads colors from the active palette and has no hardcoded hex or `rgb(` values left on themed elements.
@@ -43,7 +43,7 @@ export type Skin = "neon" | "classic" | "retro";
 setSkin?(skin: Skin): void; // repaints with the new palette; no restart
 
 // lib/games/registry.ts — GameEntry
-skins?: true; // shows the pause-overlay skin selector
+skins?: true; // shows the HUD skin button
 
 // lib/skin-pref.ts
 export const SKIN_KEY = "arcade-vault:skin:v1";
@@ -127,7 +127,7 @@ Neon values below equal what the engines draw today. Retro tones: Game Boy `#0f3
 ## Implementation plan
 
 1. **Contract and preference** — add `Skin` and `setSkin?` to `types.ts`, `skins?` to `GameEntry`, and `lib/skin-pref.ts` with `useSkin()`. Nothing imports it yet.
-2. **Shell wiring** — `GameCanvas` gets the `skin` prop and calls `setSkin?.` after `create()` and on change. `GamePlayer` reads `useSkin()` and renders the pause-overlay selector when `entry.skins`. Registry flags stay unset, so no UI changes yet.
+2. **Shell wiring** — `GameCanvas` gets the `skin` prop and calls `setSkin?.` after `create()` and on change. `GamePlayer` reads `useSkin()` and renders the HUD SKIN button when `entry.skins`. Registry flags stay unset, so no UI changes yet.
 3. **Snake** — add `lib/games/snake/skins.ts` (neon equals today), switch the engine to `palette.*`, implement `setSkin`, set `skins: true`. Smallest engine, so it proves the pattern.
 4. **Arkanoid** — same steps for `lib/games/arkanoid/skins.ts`.
 5. **Tetris** — same steps for `lib/games/tetris/skins.ts`.
@@ -138,7 +138,7 @@ Neon values below equal what the engines draw today. Retro tones: Game Boy `#0f3
 ## Acceptance criteria
 
 - [ ] On a first visit (empty `localStorage`) every game renders with the neon look, unchanged from today.
-- [ ] The pause overlay of each of the four games shows NEON, CLASSIC and RETRO, with NEON selected by default.
+- [ ] The HUD bar of each of the four games shows a SKIN button reading NEON by default; each click moves to CLASSIC, then RETRO, then back to NEON, also while the game is running.
 - [ ] Selecting a skin repaints the canvas right away and keeps score, lives, level and board state.
 - [ ] The choice is written to `arcade-vault:skin:v1` and survives reload, PLAY AGAIN and navigation between games.
 - [ ] Setting the key to `"garbage"` loads neon, with no hydration warning.
@@ -154,7 +154,9 @@ Neon values below equal what the engines draw today. Retro tones: Game Boy `#0f3
 
 - **Yes (default):** one global skin preference for all games, like mute in SPEC 10.
 - **Yes (default):** `localStorage` key `arcade-vault:skin:v1` with in-memory fallback.
-- **Yes (default):** the selector lives in the pause overlay, so a skin change never happens mid-play.
+- **Yes (changed 2026-10-02):** the selector is a SKIN cycle button in the HUD action bar, because the skin is a global preference the player must be able to change at any time, like the SOUND toggle. `setSkin` only repaints, so changing it mid-play is safe.
+- **No (changed 2026-10-02):** the pause-overlay selector. It forced the player to pause first. The overlay no longer shows any skin control.
+- **No:** a three-button segmented control in the HUD. It is wider than the bar allows next to SOUND, PAUSE, END and EXIT.
 - **Yes (default):** neon is the default and its palette copies today's hex values, so nothing changes visually.
 - **Yes (default):** Game Boy greens for Tetris, Arkanoid and Snake, amber monochrome for Asteroids, whose vector look suits CRT amber.
 - **Yes (default):** retro Tetris and Arkanoid alternate tones for pieces and bricks. Color identity is lost, which matches a 4-tone screen.

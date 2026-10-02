@@ -2,12 +2,11 @@
 // Framework-free: owns the canvas, the rAF loop, its keyboard and pointer
 // listeners, and its sound effects. All state lives inside createArkanoid().
 
-import type { GameCallbacks, GameEngine, GameHud } from "../types";
+import type { GameCallbacks, GameEngine, GameHud, Skin } from "../types";
+import { drawScanlines } from "../scanlines";
+import { SKINS, type BrickColor, type Palette } from "./skins";
 
 type GameState = "playing" | "paused" | "gameover";
-
-type BrickColor =
-  "red" | "yellow" | "cyan" | "magenta" | "hotpink" | "green" | "gray";
 
 interface LevelBrick {
   col: number;
@@ -56,21 +55,6 @@ const EXPLOSION_DURATION = 150; // ms
 const EXPLOSION_STEPS = 4;
 const MAX_DT = 50; // ms
 const MAX_SCORE = 10_000_000; // DB CHECK on scores.score
-
-// Neon palette — values mirror the tokens in app/globals.css.
-// Brick colors by the reference's color names.
-const BRICK_COLORS: Record<BrickColor, string> = {
-  red: "#d97a3a", // --bronze
-  yellow: "#f5ff00", // --yellow
-  cyan: "#00f5ff", // --cyan
-  magenta: "#ff006e", // --magenta
-  hotpink: "#c7d0e0", // --silver
-  green: "#00ff88", // --green
-  gray: "#8a8fb5", // --ink-dim
-};
-const CYAN = "#00f5ff";
-const MAGENTA = "#ff006e";
-const INK = "#e6e9ff";
 
 const BOUNCE_SRC = "/games/arkanoid/ball-bounce.mp3";
 const BREAK_SRC = "/games/arkanoid/break-sound.mp3";
@@ -200,6 +184,8 @@ export function createArkanoid(
   let rafId: number | null = null;
   let lastTime: number | null = null;
   let destroyed = false;
+  let palette: Palette = SKINS.neon;
+  let retro = false; // draws the CRT scanlines last
   let bricksDirty = true; // bricks changed; redraw the cached brick layer
 
   // ── Sound ───────────────────────────────────────────────────────────────────
@@ -366,17 +352,22 @@ export function createArkanoid(
   // ── Draw ────────────────────────────────────────────────────────────────────
   // No HUD or overlay text: score, lives, level, pause, and game over live in React.
 
-  // Same dark radial background as .game-arena in app/globals.css.
-  const background = ctx.createRadialGradient(
-    W / 2,
-    H / 2,
-    0,
-    W / 2,
-    H / 2,
-    Math.hypot(W / 2, H / 2) * 0.7,
-  );
-  background.addColorStop(0, "#0a0030");
-  background.addColorStop(1, "#000");
+  // Neon matches the dark radial background of .game-arena in app/globals.css.
+  // Flat skins have bg2 = bg, so the same gradient paints one color.
+  function makeBackground(): CanvasGradient {
+    const g = ctx.createRadialGradient(
+      W / 2,
+      H / 2,
+      0,
+      W / 2,
+      H / 2,
+      Math.hypot(W / 2, H / 2) * 0.7,
+    );
+    g.addColorStop(0, palette.bg);
+    g.addColorStop(1, palette.bg2);
+    return g;
+  }
+  let background = makeBackground();
 
   // shadowBlur on up to 60 bricks per frame is expensive, so the bricks are
   // drawn to an offscreen layer only when one breaks or a level loads.
@@ -387,16 +378,16 @@ export function createArkanoid(
 
   // A lit neon brick: glowing fill, a top highlight strip, and a darker core.
   function drawBrick(c: CanvasRenderingContext2D, b: Block) {
-    const color = BRICK_COLORS[b.color];
+    const color = palette.bricks[b.color];
     c.save();
     c.shadowColor = color;
-    c.shadowBlur = 10;
+    c.shadowBlur = palette.glow ? 10 : 0;
     c.fillStyle = color;
     c.fillRect(b.x + 2, b.y + 2, b.w - 4, b.h - 4);
     c.shadowBlur = 0;
-    c.fillStyle = "rgba(255, 255, 255, 0.4)";
+    c.fillStyle = palette.brickHighlight;
     c.fillRect(b.x + 2, b.y + 2, b.w - 4, 3);
-    c.fillStyle = "rgba(0, 0, 0, 0.28)";
+    c.fillStyle = palette.brickShade;
     c.fillRect(b.x + 8, b.y + 8, b.w - 16, b.h - 14);
     c.restore();
   }
@@ -416,12 +407,12 @@ export function createArkanoid(
       EXPLOSION_STEPS - 1,
     );
     const grow = 2 + step * 3;
-    const color = BRICK_COLORS[exp.color];
+    const color = palette.bricks[exp.color];
     ctx.save();
     ctx.globalAlpha = 1 - step / EXPLOSION_STEPS;
     ctx.strokeStyle = color;
     ctx.shadowColor = color;
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = palette.glow ? 12 : 0;
     ctx.lineWidth = 2;
     ctx.strokeRect(
       exp.x + 2 - grow,
@@ -436,16 +427,16 @@ export function createArkanoid(
   function drawPaddle() {
     const cap = 10;
     ctx.save();
-    ctx.shadowColor = CYAN;
-    ctx.shadowBlur = 14;
-    ctx.fillStyle = CYAN;
+    ctx.shadowColor = palette.paddleBody;
+    ctx.shadowBlur = palette.glow ? 14 : 0;
+    ctx.fillStyle = palette.paddleBody;
     ctx.fillRect(paddle.x + cap, paddle.y, paddle.w - cap * 2, paddle.h);
-    ctx.shadowColor = MAGENTA;
-    ctx.fillStyle = MAGENTA;
+    ctx.shadowColor = palette.paddleAccent;
+    ctx.fillStyle = palette.paddleAccent;
     ctx.fillRect(paddle.x, paddle.y, cap, paddle.h);
     ctx.fillRect(paddle.x + paddle.w - cap, paddle.y, cap, paddle.h);
     ctx.shadowBlur = 0;
-    ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+    ctx.fillStyle = palette.paddleSheen;
     ctx.fillRect(paddle.x + 2, paddle.y + 2, paddle.w - 4, 2);
     ctx.restore();
   }
@@ -454,9 +445,9 @@ export function createArkanoid(
   function drawBall() {
     const r = ball.w / 2;
     ctx.save();
-    ctx.shadowColor = CYAN;
-    ctx.shadowBlur = 16;
-    ctx.fillStyle = INK;
+    ctx.shadowColor = palette.ballGlow ?? "transparent";
+    ctx.shadowBlur = palette.ballGlow ? 16 : 0;
+    ctx.fillStyle = palette.ball;
     ctx.beginPath();
     ctx.arc(ball.x + r, ball.y + r, r - 1, 0, Math.PI * 2);
     ctx.fill();
@@ -474,6 +465,7 @@ export function createArkanoid(
     for (const exp of explosions) drawExplosion(exp);
     drawPaddle();
     drawBall();
+    if (retro) drawScanlines(ctx, W, H);
   }
 
   // ── HUD reporting ───────────────────────────────────────────────────────────
@@ -585,6 +577,14 @@ export function createArkanoid(
       // The shell resets its HUD on PLAY AGAIN, so always send a fresh one.
       lastHud = null;
       emitHud();
+    },
+    setSkin(skin: Skin) {
+      if (destroyed) return;
+      palette = SKINS[skin];
+      retro = skin === "retro";
+      background = makeBackground();
+      bricksDirty = true; // cached brick layer uses the old colors
+      draw(); // repaint now, also while paused
     },
     jumpToLevel(n: number) {
       if (destroyed || state === "gameover") return;

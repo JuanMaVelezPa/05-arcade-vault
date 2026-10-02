@@ -25,6 +25,7 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     width: 800,
     height: 600,
     input: "keyboard",
+    skins: true,
     ariaLabel:
       "Asteroids game. Arrow keys rotate and thrust, Space fires, P pauses.",
     controls: {
@@ -37,6 +38,7 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     width: 450,
     height: 600,
     input: "keyboard",
+    skins: true,
     ariaLabel:
       "Tetris game. Left and right arrows move, Up or X rotates, Down soft drops, Space hard drops, P pauses.",
     controls: {
@@ -51,6 +53,7 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     input: "pointer",
     levels: 5,
     sound: true,
+    skins: true,
     ariaLabel:
       "Arkanoid game. Move the mouse, drag a finger, or use the left and right arrows to move the paddle. P pauses.",
     controls: {
