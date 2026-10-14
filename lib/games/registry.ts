@@ -15,6 +15,7 @@ export interface GameEntry {
   controls: { keys: ControlKey[]; text: string }; // content of the notice
   levels?: number; // shows the pause-overlay level selector when set
   sound?: boolean; // shows the HUD mute toggle when true
+  skins?: true; // shows the HUD skin button
 }
 
 // Real canvas games by catalog id. Ids with no entry keep the simulated arena.
@@ -24,6 +25,7 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     width: 800,
     height: 600,
     input: "keyboard",
+    skins: true,
     ariaLabel:
       "Asteroids game. Arrow keys rotate and thrust, Space fires, P pauses.",
     controls: {
@@ -36,6 +38,7 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     width: 450,
     height: 600,
     input: "keyboard",
+    skins: true,
     ariaLabel:
       "Tetris game. Left and right arrows move, Up or X rotates, Down soft drops, Space hard drops, P pauses.",
     controls: {
@@ -50,6 +53,7 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     input: "pointer",
     levels: 5,
     sound: true,
+    skins: true,
     ariaLabel:
       "Arkanoid game. Move the mouse, drag a finger, or use the left and right arrows to move the paddle. P pauses.",
     controls: {
@@ -63,6 +67,7 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     height: 600,
     input: "keyboard",
     levels: 5,
+    skins: true,
     ariaLabel: "Snake game. Arrow keys or W, A, S, D turn the snake, P pauses.",
     controls: {
       keys: ["←", "↑", "→", "↓"],

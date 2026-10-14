@@ -1486,3 +1486,20 @@ a { color: inherit; text-decoration: none; }
 .btn.sound-toggle.off:hover { color: var(--ink); border-color: var(--ink-dim); box-shadow: none; }
 .btn.sound-toggle:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .sound-led { transition: none; } }
+
+/* HUD skin button (games with GameEntry.skins): cycles the skin; a chip previews the current palette */
+.btn.skin-toggle {
+  --chip-bg: #0a0030; --chip-a: var(--cyan); --chip-b: var(--magenta);
+  min-width: 14em; justify-content: flex-start; gap: 10px;
+}
+.skin-toggle::after { /* palette chip: playfield with two accent blocks */
+  content: ""; order: -1; width: 18px; height: 18px; flex: none;
+  background:
+    linear-gradient(var(--chip-a), var(--chip-a)) 3px 3px / 5px 5px no-repeat,
+    linear-gradient(var(--chip-b), var(--chip-b)) 10px 10px / 5px 5px no-repeat,
+    var(--chip-bg);
+  border: 1px solid rgba(255,255,255,0.25);
+}
+.btn.skin-toggle.skin-classic { --chip-bg: #000; --chip-a: #fff; --chip-b: #e83800; }
+.btn.skin-toggle.skin-retro { --chip-bg: #9bbc0f; --chip-a: #0f380f; --chip-b: #306230; }
+.btn.skin-toggle:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }

@@ -2,7 +2,9 @@
 // Framework-free: owns the canvas, the rAF loop, and its keyboard listeners.
 // All state lives inside createSnake().
 
-import type { GameCallbacks, GameEngine, GameHud } from "../types";
+import type { GameCallbacks, GameEngine, GameHud, Skin } from "../types";
+import { drawScanlines } from "../scanlines";
+import { SKINS, type Palette } from "./skins";
 
 type GameState = "playing" | "paused" | "gameover";
 
@@ -31,13 +33,6 @@ const BLINK_MS = 600; // respawn freeze after a crash or a level change
 const MAX_TURNS = 2; // turns buffered per tick
 const MAX_DT = 50; // ms
 const MAX_SCORE = 10_000_000; // DB CHECK on scores.score
-
-// Neon palette — values mirror the tokens in app/globals.css.
-const GREEN = "#00ff88"; // --green
-const MAGENTA = "#ff006e"; // --magenta
-const LINE = "rgba(0, 245, 255, 0.18)"; // --line
-const HEAD = "#b3ffd9"; // a brighter --green
-const EYE = "#0a0a0f"; // --bg
 
 // ── Fruit sprites ─────────────────────────────────────────────────────────────
 // Middle pixel-art row of fruits.png (3790 × 442), mapped from
@@ -216,6 +211,8 @@ export function createSnake(
   let rafId: number | null = null;
   let lastTime: number | null = null;
   let destroyed = false;
+  let palette: Palette = SKINS.neon;
+  let retro = false; // draws the CRT scanlines last
   let fieldDirty = true; // level changed; redraw the cached background and walls
 
   // ── Game logic ──────────────────────────────────────────────────────────────
@@ -378,17 +375,22 @@ export function createSnake(
   const fruitImg = new Image();
   fruitImg.src = FRUITS_SRC;
 
-  // Same dark radial background as .game-arena in app/globals.css.
-  const background = ctx.createRadialGradient(
-    W / 2,
-    H / 2,
-    0,
-    W / 2,
-    H / 2,
-    Math.hypot(W / 2, H / 2) * 0.7,
-  );
-  background.addColorStop(0, "#0a0030");
-  background.addColorStop(1, "#000");
+  // Neon matches the dark radial background of .game-arena in app/globals.css.
+  // Flat skins have bg2 = bg, so the same gradient paints one color.
+  function makeBackground(): CanvasGradient {
+    const g = ctx.createRadialGradient(
+      W / 2,
+      H / 2,
+      0,
+      W / 2,
+      H / 2,
+      Math.hypot(W / 2, H / 2) * 0.7,
+    );
+    g.addColorStop(0, palette.bg);
+    g.addColorStop(1, palette.bg2);
+    return g;
+  }
+  let background = makeBackground();
 
   // Background, grid, and glowing walls only change with the level, so they
   // are drawn to an offscreen layer instead of every frame.
@@ -402,7 +404,7 @@ export function createSnake(
     c.fillRect(0, 0, W, H);
 
     // Faint grid on the cell lines.
-    c.strokeStyle = LINE;
+    c.strokeStyle = palette.grid;
     c.lineWidth = 1;
     c.beginPath();
     for (let x = 1; x < COLS; x++) {
@@ -418,16 +420,16 @@ export function createSnake(
     // Walls: glowing magenta blocks with a top highlight and a darker core.
     const walls = LEVELS[level - 1].walls;
     c.save();
-    c.shadowColor = MAGENTA;
-    c.shadowBlur = 12;
-    c.fillStyle = MAGENTA;
+    c.shadowColor = palette.glowFruit ?? "transparent";
+    c.shadowBlur = palette.glowFruit ? 12 : 0;
+    c.fillStyle = palette.fruit;
     for (const [x, y] of walls)
       c.fillRect(x * CELL + 1, y * CELL + 1, CELL - 2, CELL - 2);
     c.shadowBlur = 0;
-    c.fillStyle = "rgba(255, 255, 255, 0.4)";
+    c.fillStyle = palette.fruitHighlight;
     for (const [x, y] of walls)
       c.fillRect(x * CELL + 3, y * CELL + 3, CELL - 6, 3);
-    c.fillStyle = "rgba(0, 0, 0, 0.28)";
+    c.fillStyle = palette.fruitShade;
     for (const [x, y] of walls)
       c.fillRect(x * CELL + 7, y * CELL + 8, CELL - 14, CELL - 14);
     c.restore();
@@ -461,9 +463,9 @@ export function createSnake(
 
     // Fallback until the sheet loads, or if it fails to.
     ctx.save();
-    ctx.shadowColor = MAGENTA;
-    ctx.shadowBlur = 14;
-    ctx.fillStyle = MAGENTA;
+    ctx.shadowColor = palette.glowFruit ?? "transparent";
+    ctx.shadowBlur = palette.glowFruit ? 14 : 0;
+    ctx.fillStyle = palette.fruit;
     ctx.beginPath();
     ctx.arc(cx, cy, CELL / 2 - 4, 0, Math.PI * 2);
     ctx.fill();
@@ -479,16 +481,18 @@ export function createSnake(
   function drawSnake() {
     const [head, ...body] = snake;
     ctx.save();
-    ctx.shadowColor = GREEN;
-    ctx.shadowBlur = 10;
-    ctx.fillStyle = GREEN;
+    const glow = palette.glowSnake;
+    ctx.shadowColor = glow ?? "transparent";
+    ctx.shadowBlur = glow ? 10 : 0;
+    ctx.fillStyle = palette.body;
     ctx.beginPath();
     for (const s of body) segmentPath(s);
     ctx.fill();
 
-    const headColor = crashFlash && blinkMs > 0 ? MAGENTA : HEAD;
-    ctx.shadowColor = headColor;
-    ctx.shadowBlur = 16;
+    const headColor =
+      crashFlash && blinkMs > 0 ? palette.headCrash : palette.head;
+    ctx.shadowColor = glow ? headColor : "transparent";
+    ctx.shadowBlur = glow ? 16 : 0;
     ctx.fillStyle = headColor;
     ctx.beginPath();
     segmentPath(head);
@@ -500,7 +504,7 @@ export function createSnake(
     const ahead = 4;
     const spread = 5;
     ctx.shadowBlur = 0;
-    ctx.fillStyle = EYE;
+    ctx.fillStyle = palette.eye;
     for (const side of [-1, 1]) {
       ctx.beginPath();
       ctx.arc(
@@ -529,8 +533,9 @@ export function createSnake(
     if (fruit) drawFruit(fruit);
 
     // The snake blinks every 100 ms while it waits to move.
-    if (blinkMs > 0 && Math.floor(blinkMs / 100) % 2 === 1) return;
-    drawSnake();
+    const hidden = blinkMs > 0 && Math.floor(blinkMs / 100) % 2 === 1;
+    if (!hidden) drawSnake();
+    if (retro) drawScanlines(ctx, W, H);
   }
 
   // ── HUD reporting ───────────────────────────────────────────────────────────
@@ -640,6 +645,14 @@ export function createSnake(
       // The shell resets its HUD on PLAY AGAIN, so always send a fresh one.
       lastHud = null;
       emitHud();
+    },
+    setSkin(skin: Skin) {
+      if (destroyed) return;
+      palette = SKINS[skin];
+      retro = skin === "retro";
+      background = makeBackground();
+      fieldDirty = true; // cached background, grid and walls use the old colors
+      draw(); // repaint now, also while paused
     },
     jumpToLevel(n: number) {
       if (destroyed || state === "gameover") return;

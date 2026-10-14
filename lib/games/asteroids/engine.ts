@@ -2,7 +2,9 @@
 // Framework-free: owns the canvas, the rAF loop, and its keyboard listeners.
 // All state lives inside createAsteroids() so several instances never share it.
 
-import type { GameCallbacks, GameEngine, GameHud } from "../types";
+import type { GameCallbacks, GameEngine, GameHud, Skin } from "../types";
+import { drawScanlines } from "../scanlines";
+import { SKINS, type Palette } from "./skins";
 
 type GameState = "playing" | "dead" | "paused" | "gameover";
 
@@ -18,15 +20,6 @@ const TRIPLE_SPREAD = 0.18;
 const RADII = [0, 16, 30, 50]; // by size 1, 2, 3
 const SPEEDS = [0, 85, 55, 32]; // base speed by size
 const POINTS = [0, 100, 50, 20]; // points by size
-
-// Neon palette — values mirror the tokens in app/globals.css.
-const CYAN = "#00f5ff";
-const MAGENTA = "#ff006e";
-const YELLOW = "#f5ff00";
-const WHITE = "#ffffff";
-const FLAME = "rgba(255, 140, 0, 0.9)";
-const FLAME_GLOW = "#ff8c00";
-const ASTEROID_COLORS = ["", MAGENTA, YELLOW, MAGENTA]; // by size 1, 2, 3
 
 const START_LIVES = 3;
 const RESPAWN_DELAY = 2;
@@ -48,12 +41,6 @@ const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
 const randInt = (min: number, max: number) => Math.floor(rand(min, max + 1));
 
-// Stroke/fill glow via canvas shadow; callers wrap in save()/restore().
-function glow(ctx: CanvasRenderingContext2D, color: string, blur: number) {
-  ctx.shadowColor = color;
-  ctx.shadowBlur = blur;
-}
-
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   return (
@@ -72,17 +59,33 @@ export function createAsteroids(
   if (!context) throw new Error("Asteroids: 2D canvas context not available");
   const ctx: CanvasRenderingContext2D = context;
 
-  // Same dark radial background as .game-arena in app/globals.css.
-  const background = ctx.createRadialGradient(
-    W / 2,
-    H / 2,
-    0,
-    W / 2,
-    H / 2,
-    Math.hypot(W / 2, H / 2) * 0.7,
-  );
-  background.addColorStop(0, "#0a0030");
-  background.addColorStop(1, "#000");
+  let palette: Palette = SKINS.neon;
+  let retro = false; // draws the CRT scanlines last
+
+  // Neon matches the dark radial background of .game-arena in app/globals.css.
+  // Flat skins have bg2 = bg, so the same gradient paints one color.
+  function makeBackground(): CanvasGradient {
+    const g = ctx.createRadialGradient(
+      W / 2,
+      H / 2,
+      0,
+      W / 2,
+      H / 2,
+      Math.hypot(W / 2, H / 2) * 0.7,
+    );
+    g.addColorStop(0, palette.bg);
+    g.addColorStop(1, palette.bg2);
+    return g;
+  }
+  let background = makeBackground();
+
+  // Stroke/fill glow via canvas shadow; callers wrap in save()/restore().
+  // A no-op on skins without glow.
+  function glow(ctx: CanvasRenderingContext2D, color: string, blur: number) {
+    if (!palette.glow) return;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = blur;
+  }
 
   // ── Input ───────────────────────────────────────────────────────────────────
   const keys: Record<string, boolean> = {};
@@ -126,8 +129,8 @@ export function createAsteroids(
 
     draw(ctx: CanvasRenderingContext2D) {
       ctx.save();
-      glow(ctx, CYAN, 10);
-      ctx.fillStyle = WHITE;
+      glow(ctx, palette.bullet, 10);
+      ctx.fillStyle = palette.white;
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
       ctx.fill();
@@ -141,7 +144,6 @@ export function createAsteroids(
     y: number;
     size: number;
     radius: number;
-    color: string;
     vx: number;
     vy: number;
     rot: number;
@@ -154,7 +156,6 @@ export function createAsteroids(
       this.y = y;
       this.size = size;
       this.radius = RADII[size];
-      this.color = ASTEROID_COLORS[size];
 
       const angle = rand(0, Math.PI * 2);
       const speed = SPEEDS[size] + rand(-15, 15);
@@ -176,6 +177,11 @@ export function createAsteroids(
       this.x = wrap(this.x + this.vx * dt, W);
       this.y = wrap(this.y + this.vy * dt, H);
       this.rot += this.rotSpeed * dt;
+    }
+
+    // Sizes 1 and 3 share a color; read live so a skin change repaints them.
+    get color(): string {
+      return this.size === 2 ? palette.asteroidB : palette.asteroidA;
     }
 
     split(): Asteroid[] {
@@ -234,17 +240,17 @@ export function createAsteroids(
       if (this.ttl < 2 && Math.floor(this.ttl * 8) % 2 === 0) return;
       const pulse = 0.85 + Math.sin(performance.now() / 150) * 0.15;
       ctx.save();
-      glow(ctx, CYAN, 14);
+      glow(ctx, palette.powerUp, 14);
       ctx.translate(this.x, this.y);
       ctx.rotate(Math.PI / 4);
-      ctx.strokeStyle = CYAN;
+      ctx.strokeStyle = palette.powerUp;
       ctx.lineWidth = 2;
       const r = this.radius * pulse;
       ctx.strokeRect(-r, -r, r * 2, r * 2);
       ctx.restore();
       ctx.save();
-      glow(ctx, CYAN, 8);
-      ctx.fillStyle = CYAN;
+      glow(ctx, palette.powerUp, 8);
+      ctx.fillStyle = palette.powerUp;
       ctx.font = "bold 12px monospace";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -330,8 +336,10 @@ export function createAsteroids(
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.angle);
-      glow(ctx, CYAN, 12);
-      ctx.strokeStyle = CYAN;
+      const shipColor =
+        this.invincible > 0 ? palette.shipInvincible : palette.ship;
+      glow(ctx, shipColor, 12);
+      ctx.strokeStyle = shipColor;
       ctx.lineWidth = 1.5;
       ctx.lineJoin = "round";
 
@@ -350,8 +358,8 @@ export function createAsteroids(
         ctx.moveTo(-8, -4);
         ctx.lineTo(-8 - rand(6, 14), 0);
         ctx.lineTo(-8, 4);
-        glow(ctx, FLAME_GLOW, 12);
-        ctx.strokeStyle = FLAME;
+        glow(ctx, palette.flameGlow ?? palette.flame, 12);
+        ctx.strokeStyle = palette.flame;
         ctx.stroke();
       }
 
@@ -367,10 +375,10 @@ export function createAsteroids(
     vy: number;
     life: number;
     ttl: number;
-    color: string;
+    color: () => string; // read per frame so a skin change recolors live sparks
     dead = false;
 
-    constructor(x: number, y: number, color: string) {
+    constructor(x: number, y: number, color: () => string) {
       this.x = x;
       this.y = y;
       this.color = color;
@@ -392,8 +400,9 @@ export function createAsteroids(
     draw(ctx: CanvasRenderingContext2D) {
       ctx.save();
       ctx.globalAlpha = Math.max(0, this.ttl / this.life);
-      glow(ctx, this.color, 6);
-      ctx.strokeStyle = this.color;
+      const color = this.color();
+      glow(ctx, color, 6);
+      ctx.strokeStyle = color;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(this.x, this.y);
@@ -463,7 +472,7 @@ export function createAsteroids(
     spawnAsteroids(3 + level);
   }
 
-  function explode(x: number, y: number, color: string, count = 8) {
+  function explode(x: number, y: number, color: () => string, count = 8) {
     for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color));
   }
 
@@ -475,7 +484,7 @@ export function createAsteroids(
   }
 
   function killShip() {
-    explode(ship.x, ship.y, CYAN, 14);
+    explode(ship.x, ship.y, () => palette.shipExplosion, 14);
     ship.dead = true;
     lives--;
     if (lives <= 0) {
@@ -540,7 +549,7 @@ export function createAsteroids(
           b.dead = true;
           a.dead = true;
           score += POINTS[a.size];
-          explode(a.x, a.y, a.color, a.size * 5);
+          explode(a.x, a.y, () => a.color, a.size * 5);
           newAsteroids.push(...a.split());
           if (!powerUpSpawned) {
             killsSinceSpawn++;
@@ -581,6 +590,7 @@ export function createAsteroids(
     powerUps.forEach((p) => p.draw(ctx));
     bullets.forEach((b) => b.draw(ctx));
     ship.draw(ctx);
+    if (retro) drawScanlines(ctx, W, H);
   }
 
   // ── HUD reporting ───────────────────────────────────────────────────────────
@@ -690,6 +700,13 @@ export function createAsteroids(
       if (destroyed) return;
       initGame();
       emitHud();
+    },
+    setSkin(skin: Skin) {
+      if (destroyed) return;
+      palette = SKINS[skin];
+      retro = skin === "retro";
+      background = makeBackground();
+      draw(); // repaint now, also while paused
     },
     destroy() {
       destroyed = true;

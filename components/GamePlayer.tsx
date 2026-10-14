@@ -8,11 +8,17 @@ import GameCanvas, { type GameHandle } from "@/components/games/GameCanvas";
 import { GAME_REGISTRY, type GameEntry } from "@/lib/games/registry";
 import type { GameHud, HudExtra } from "@/lib/games/types";
 import { useMuted } from "@/lib/sound-pref";
+import { useSkin } from "@/lib/skin-pref";
+import type { Skin } from "@/lib/games/types";
 import type { Game } from "@/lib/types";
 
 interface GamePlayerProps {
   game: Game;
 }
+
+const SKIN_ORDER: readonly Skin[] = ["neon", "classic", "retro"];
+const nextSkin = (s: Skin): Skin =>
+  SKIN_ORDER[(SKIN_ORDER.indexOf(s) + 1) % SKIN_ORDER.length];
 
 export default function GamePlayer({ game }: GamePlayerProps) {
   const router = useRouter();
@@ -34,6 +40,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
   const [extras, setExtras] = useState<HudExtra[]>([]);
   // Global, per-device preference; the toggle and M key only exist for games with sound.
   const [muted, setMuted] = useMuted();
+  const [skin, setSkin] = useSkin();
   const hasSound = entry?.sound === true;
 
   useEffect(() => {
@@ -155,6 +162,17 @@ export default function GamePlayer({ game }: GamePlayerProps) {
               {muted ? "SOUND OFF" : "SOUND ON"}
             </button>
           )}
+          {entry?.skins && (
+            <button
+              type="button"
+              className={`btn skin-toggle skin-${skin}`}
+              aria-label={`Change skin, current ${skin}`}
+              title="Change skin"
+              onClick={() => setSkin(nextSkin(skin))}
+            >
+              SKIN: {skin.toUpperCase()}
+            </button>
+          )}
           <button type="button" className="btn yellow" onClick={togglePause}>
             {paused ? "RESUME" : "PAUSE"}
           </button>
@@ -174,6 +192,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
               entry={entry}
               ref={gameRef}
               muted={muted}
+              skin={skin}
               onHud={handleHud}
               onGameOver={handleGameOver}
               onPauseChange={setPaused}

@@ -18,6 +18,8 @@ export interface GameCallbacks {
   onPauseChange: (paused: boolean) => void; // P/Escape, hidden tab, blur
 }
 
+export type Skin = "neon" | "classic" | "retro";
+
 export interface GameEngine {
   pause(): void;
   resume(): void;
@@ -26,6 +28,7 @@ export interface GameEngine {
   destroy(): void; // cancels rAF and removes all listeners
   jumpToLevel?(level: number): void; // 1-based; keeps score and lives, resumes
   setMuted?(muted: boolean): void; // true stops live sounds and blocks new ones
+  setSkin?(skin: Skin): void; // repaints with the new palette; no restart
 }
 
 export type CreateGame = (
