@@ -1,15 +1,10 @@
-## Arcade Vault
+# Arcade Vault
 
-Es una plataforma para jugar online y competir por la mayor cantidad de puntos.
+Play retro games online and compete for the highest score.
 
-## Usa Spec Driven Design
+## Spec-driven development
 
-Basado en /spec y /spec-impl
-
-Siguiendo las buenas practicas recomendadas aquí:
-https://github.com/Klerith/fernando-skills
-
-## Skills usadas
+Features follow `/spec` and `/spec-impl`, from [Klerith/fernando-skills](https://github.com/Klerith/fernando-skills):
 
 ```bash
 npx skills@latest add Klerith/fernando-skills
@@ -21,5 +16,29 @@ npx skills@latest add Klerith/fernando-skills
 npm run dev     # start dev server (Next.js, Turbopack)
 npm run build   # production build
 npm run start   # run production build
-npm run lint    # ESLint (flat config, eslint-config-next core-web-vitals + typescript)
+npm run lint    # ESLint
 ```
+
+## Test on a phone (WSL + localtunnel)
+
+1. Start the dev server:
+
+   ```bash
+   npm run dev
+   ```
+
+2. In a new terminal, open a public tunnel and copy the URL it prints (like `https://xxxx-xxxx.loca.lt`):
+
+   ```bash
+   npx localtunnel --port 3000
+   ```
+
+3. Get your public IP:
+
+   ```bash
+   curl ifconfig.me
+   ```
+
+4. Open the tunnel URL on your phone and enter the IP from step 3 as the Tunnel Password.
+
+`next.config.ts` needs `allowedDevOrigins: ["*.loca.lt"]` for the tunnel to work in dev.

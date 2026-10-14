@@ -1194,7 +1194,7 @@ a { color: inherit; text-decoration: none; }
 
 /* ===== ACTIVITY (leaderboard + ticker) ===== */
 .activity-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; }
-@media (max-width: 900px) { .activity-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .activity-grid { grid-template-columns: minmax(0, 1fr); } }
 .activity-card { background: var(--bg-2); border: 1px solid var(--line); padding: 0; }
 .ac-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); min-width: 0; }
 .ac-title { font-size: 10px; letter-spacing: 0.1em; color: var(--cyan); text-shadow: 0 0 8px rgba(0,245,255,0.5); min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1503,3 +1503,60 @@ a { color: inherit; text-decoration: none; }
 .btn.skin-toggle.skin-classic { --chip-bg: #000; --chip-a: #fff; --chip-b: #e83800; }
 .btn.skin-toggle.skin-retro { --chip-bg: #9bbc0f; --chip-a: #0f380f; --chip-b: #306230; }
 .btn.skin-toggle:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
+
+/* ===== mobile responsive (spec 14): public pages ===== */
+@media (max-width: 840px) {
+  .av-nav .logo { min-height: 44px; align-items: center; }
+  .av-nav .hamburger { min-width: 44px; min-height: 44px; }
+}
+@media (max-width: 720px) {
+  .btn, .chip, .lb-link { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  .stats-inner { grid-template-columns: minmax(0, 1fr); }
+  .hall-table .th, .hall-table .tr { grid-template-columns: 50px minmax(0, 1fr) 90px 90px; }
+  .hall-table .tr .pl { overflow: hidden; text-overflow: ellipsis; }
+}
+@media (max-width: 520px) {
+  .hall-table .th { font-size: 8px; letter-spacing: 0.04em; }
+  .hall-table .tr .sc { font-size: 11px; }
+  .hall-table .tr .dt { font-size: 10px; }
+  .hall-table.champions .th, .hall-table.champions .tr { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 62px 74px; gap: 8px; }
+}
+
+/* ===== mobile responsive (spec 14): game pages ===== */
+@media (max-width: 720px) {
+  .player-hud { padding: 12px; }
+  .hud-actions { flex-wrap: wrap; width: 100%; }
+  .hud-actions .btn { flex: 1 1 auto; }
+  .btn.sound-toggle { min-width: 0; justify-content: center; }
+  .crt { padding: 12px; border-radius: 20px; }
+  .crt-bottom { flex-wrap: wrap; gap: 6px 12px; padding: 0 2px; letter-spacing: 0.08em; }
+  .crt-bottom > * { white-space: nowrap; }
+  .modal { width: 100%; padding: 24px 16px; }
+  .modal h2 { font-size: 18px; }
+  .modal .final { font-size: 28px; }
+  .modal .input-row input { min-width: 0; }
+}
+
+/* ===== mobile responsive (spec 14): game detail, Play above the fold ===== */
+@media (max-width: 900px) {
+  .detail-info h2 { order: -2; }
+  .detail-info .detail-actions { order: -1; margin-top: 0; flex-direction: column; align-items: stretch; }
+  .detail-actions .btn { width: 100%; justify-content: center; text-align: center; }
+  .detail-actions .btn.xl { padding: 18px 20px; }
+  .detail-actions .btn.lg { padding: 14px 20px; }
+}
+
+/* ===== mobile responsive (spec 14): centered CTAs ===== */
+@media (max-width: 720px) {
+  .home-ctas { flex-direction: column; align-items: stretch; width: 100%; max-width: 420px; margin-inline: auto; }
+  .home-ctas .btn, .final-cta { width: 100%; justify-content: center; text-align: center; }
+  .final-cta { max-width: 420px; margin-inline: auto; }
+}
+
+/* ===== mobile responsive (spec 14): compact square burger ===== */
+@media (max-width: 840px) {
+  .av-nav .hamburger { width: 44px; min-width: 44px; padding: 0; }
+}
+
+/* ===== mobile responsive (spec 14): narrower burger menu panel ===== */
+.av-mobile-panel { width: min(240px, 62vw); }
