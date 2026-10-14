@@ -736,58 +736,6 @@ a { color: inherit; text-decoration: none; }
   margin: 0 auto;
   background: #000;
 }
-/* touch-only notice: the keys the game needs, drawn as neon keycaps */
-.kbd-required {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: clamp(10px, 3.2cqw, 20px);
-  padding: 0 8%;
-  text-align: center;
-  background: radial-gradient(circle at 50% 45%, #0a0030 0%, #000 70%);
-  container-type: size;
-}
-.kbd-cluster {
-  --key: clamp(20px, 8cqw, 40px);
-  display: grid;
-  grid-template-columns: repeat(3, var(--key));
-  grid-template-rows: var(--key) var(--key) calc(var(--key) * 0.8);
-  gap: calc(var(--key) * 0.14);
-}
-.kbd-key {
-  display: grid; place-items: center;
-  border: 2px solid var(--ink-faint);
-  border-bottom-width: 4px;
-  border-radius: 4px;
-  font-family: var(--pixel);
-  font-size: calc(var(--key) * 0.34);
-  color: var(--ink-faint);
-}
-.kbd-key.on {
-  border-color: var(--cyan);
-  color: var(--cyan);
-  box-shadow: 0 0 8px rgba(0,245,255,0.45), inset 0 0 6px rgba(0,245,255,0.2);
-  text-shadow: 0 0 6px rgba(0,245,255,0.7);
-}
-.kbd-up { grid-column: 2; grid-row: 1; }
-.kbd-left { grid-column: 1; grid-row: 2; }
-.kbd-down { grid-column: 2; grid-row: 2; }
-.kbd-right { grid-column: 3; grid-row: 2; }
-.kbd-space { grid-column: 1 / -1; grid-row: 3; margin-top: calc(var(--key) * 0.2); font-size: calc(var(--key) * 0.26); letter-spacing: 0.2em; }
-.kbd-title {
-  font-size: clamp(10px, 3.4cqw, 18px);
-  color: var(--yellow);
-  text-shadow: 0 0 6px rgba(245,255,0,0.6), 0 0 16px rgba(245,255,0,0.35);
-  line-height: 1.4;
-}
-.kbd-text {
-  max-width: 34ch;
-  margin: 0;
-  font-family: var(--mono);
-  font-size: clamp(10px, 2.6cqw, 13px);
-  line-height: 1.5;
-  color: var(--ink-dim);
-}
-
 /* fake in-screen game */
 .game-arena {
   position: absolute; inset: 0;
@@ -1560,3 +1508,119 @@ a { color: inherit; text-decoration: none; }
 
 /* ===== mobile responsive (spec 14): narrower burger menu panel ===== */
 .av-mobile-panel { width: min(240px, 62vw); }
+
+/* ===== touch pad (spec 15): D-pad + A/B buttons below the CRT, touch-only ===== */
+.touchpad-slot:not(:empty) { margin-top: 16px; }
+.touchpad {
+  --cell: clamp(44px, 13.5vw, 64px);
+  --round: clamp(54px, 16vw, 76px);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  max-width: 480px; margin: 0 auto;
+  padding: 16px clamp(12px, 4vw, 28px) 12px;
+  background: linear-gradient(180deg, var(--bg-2), var(--bg));
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 40px -18px rgba(0,245,255,0.3);
+}
+.touchpad-btn {
+  display: grid; place-items: center;
+  padding: 0;
+  font-family: var(--pixel);
+  color: var(--cyan);
+  background: var(--bg-3);
+  border: 2px solid var(--cyan);
+  text-shadow: 0 0 6px rgba(0,245,255,0.7);
+  box-shadow: 0 4px 0 rgba(0,245,255,0.28), 0 0 12px rgba(0,245,255,0.3), inset 0 0 8px rgba(0,245,255,0.15);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 60ms, box-shadow 60ms, background 60ms;
+}
+.touchpad-btn:active:not(:disabled) {
+  transform: translateY(3px);
+  background: rgba(0,245,255,0.18);
+  box-shadow: 0 1px 0 rgba(0,245,255,0.28), 0 0 18px rgba(0,245,255,0.55), inset 0 0 12px rgba(0,245,255,0.3);
+}
+.touchpad-btn:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
+.touchpad-btn:disabled {
+  opacity: 0.25; cursor: default;
+  color: var(--ink-faint); border-color: var(--ink-faint);
+  text-shadow: none; box-shadow: none;
+}
+.touchpad-dpad {
+  position: relative;
+  display: grid;
+  grid-template: "." var(--cell) "." var(--cell) "." var(--cell) / var(--cell) var(--cell) var(--cell);
+  grid-template-areas: ". up ." "left hub right" ". down .";
+}
+.touchpad-dpad::before { /* hub joining the four arms */
+  content: ""; grid-area: hub;
+  background: var(--bg-3);
+  border-block: 2px solid var(--cyan); border-radius: 0;
+  opacity: 0.6;
+}
+.touchpad-dir { width: var(--cell); height: var(--cell); font-size: clamp(16px, 5vw, 22px); }
+.touchpad-up { grid-area: up; border-radius: 12px 12px 0 0; }
+.touchpad-down { grid-area: down; border-radius: 0 0 12px 12px; }
+.touchpad-left { grid-area: left; border-radius: 12px 0 0 12px; }
+.touchpad-right { grid-area: right; border-radius: 0 12px 12px 0; }
+.touchpad-actions { display: flex; align-items: flex-start; gap: clamp(6px, 2.5vw, 16px); }
+.touchpad-action { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.touchpad-b { margin-top: calc(var(--round) * 0.5); } /* B sits lower-left, A upper-right */
+.touchpad-round {
+  width: var(--round); height: var(--round);
+  border-radius: 50%;
+  font-size: clamp(14px, 4.4vw, 18px);
+}
+.touchpad-a .touchpad-round {
+  color: var(--magenta); border-color: var(--magenta);
+  text-shadow: 0 0 6px rgba(255,0,110,0.7);
+  box-shadow: 0 4px 0 rgba(255,0,110,0.3), 0 0 12px rgba(255,0,110,0.35), inset 0 0 8px rgba(255,0,110,0.15);
+}
+.touchpad-a .touchpad-round:active:not(:disabled) {
+  background: rgba(255,0,110,0.2);
+  box-shadow: 0 1px 0 rgba(255,0,110,0.3), 0 0 18px rgba(255,0,110,0.6), inset 0 0 12px rgba(255,0,110,0.3);
+}
+.touchpad-b .touchpad-round {
+  color: var(--yellow); border-color: var(--yellow);
+  text-shadow: 0 0 6px rgba(245,255,0,0.6);
+  box-shadow: 0 4px 0 rgba(245,255,0,0.28), 0 0 12px rgba(245,255,0,0.3), inset 0 0 8px rgba(245,255,0,0.12);
+}
+.touchpad-b .touchpad-round:active:not(:disabled) {
+  background: rgba(245,255,0,0.16);
+  box-shadow: 0 1px 0 rgba(245,255,0,0.28), 0 0 18px rgba(245,255,0,0.55), inset 0 0 12px rgba(245,255,0,0.25);
+}
+.touchpad-a .touchpad-round:disabled, .touchpad-b .touchpad-round:disabled {
+  color: var(--ink-faint); border-color: var(--ink-faint); text-shadow: none; box-shadow: none;
+}
+.touchpad-caption {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  color: var(--ink-dim);
+  min-height: 1.2em;
+}
+.touchpad-action:has(button:disabled) .touchpad-caption { opacity: 0.35; }
+
+/* ===== compact play layout (spec 15): touch-only, only while the pad is rendered ===== */
+body:has(.touchpad):not(:has(.av-player.show-nav)) .av-nav,
+body:has(.touchpad) .av-footer { display: none; }
+.av-player:has(.touchpad) { margin: 0 auto; padding: 8px 12px 16px; }
+.av-player:has(.touchpad) .player-hud { padding: 8px 10px; margin-bottom: 8px; gap: 8px; }
+.av-player:has(.touchpad) .player-hud > div:first-child { gap: 6px 14px !important; }
+.av-player:has(.touchpad) .hud-stat { gap: 2px; }
+.av-player:has(.touchpad) .hud-stat .v { font-size: 13px; }
+.av-player:has(.touchpad) .hud-actions { gap: 6px; flex-wrap: wrap; }
+.av-player:has(.touchpad) .hud-actions .btn { min-height: 44px; padding: 0 4px; font-size: 8px; letter-spacing: 0; min-width: 44px; flex: 1 1 auto; white-space: nowrap; }
+.av-player:has(.touchpad) .crt { padding: 8px; border-radius: 18px; }
+.av-player:has(.touchpad) .crt-bottom { display: none; }
+.av-player:has(.touchpad) .touchpad-slot:not(:empty) { margin-top: 10px; }
+
+/* fit the CRT to the window height so the whole screen is visible without scrolling
+   (--crt-chrome = nav + HUD + bezel + caption + margins above and below the screen) */
+.av-player .crt {
+  --crt-chrome: 330px;
+  max-width: max(480px, calc((100dvh - var(--crt-chrome)) * 4 / 3 + 48px));
+  margin-inline: auto;
+}
+.av-player:has(.touchpad) .crt { max-width: none; }
+.hud-menu { display: none; }
+.av-player:has(.touchpad) .hud-menu { display: inline-flex; }
