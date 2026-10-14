@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import {
   useEffect,
   useEffectEvent,
@@ -8,7 +9,8 @@ import {
   useSyncExternalStore,
   type Ref,
 } from "react";
-import type { ControlKey, GameEntry } from "@/lib/games/registry";
+import type { GameEntry } from "@/lib/games/registry";
+import TouchPad from "@/components/games/TouchPad";
 import type { GameEngine, GameHud, Skin } from "@/lib/games/types";
 
 export interface GameHandle {
@@ -24,6 +26,7 @@ interface GameCanvasProps {
   ref?: Ref<GameHandle>;
   muted: boolean;
   skin: Skin;
+  padSlot: HTMLElement | null; // where the touch pad is portaled, below the CRT
   onHud: (hud: GameHud) => void;
   onGameOver: (finalScore: number) => void;
   onPauseChange: (paused: boolean) => void;
@@ -60,6 +63,7 @@ export default function GameCanvas({
   ref,
   muted,
   skin,
+  padSlot,
   onHud,
   onGameOver,
   onPauseChange,
@@ -73,7 +77,6 @@ export default function GameCanvas({
   const engineRef = useRef<GameEngine | null>(null);
   const { create } = entry;
   const needsKeyboard = entry.input === "keyboard";
-  const blocked = needsKeyboard && mode === "touch";
 
   // Latest callbacks without recreating the engine when the parent re-renders.
   const handleHud = useEffectEvent((hud: GameHud) => onHud(hud));
@@ -84,7 +87,7 @@ export default function GameCanvas({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (mode === "pending" || blocked || !canvas) return;
+    if (mode === "pending" || !canvas) return;
     const engine = create(canvas, {
       onHud: (hud) => handleHud(hud),
       onGameOver: (score) => handleGameOver(score),
@@ -98,7 +101,7 @@ export default function GameCanvas({
       engine.destroy();
       engineRef.current = null;
     };
-  }, [mode, blocked, create]);
+  }, [mode, create]);
 
   useEffect(() => {
     engineRef.current?.setMuted?.(muted);
@@ -121,44 +124,21 @@ export default function GameCanvas({
   );
 
   if (mode === "pending") return null;
-  if (blocked) return <KeyboardRequired controls={entry.controls} />;
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="game-canvas"
-      width={entry.width}
-      height={entry.height}
-      aria-label={entry.ariaLabel}
-      // Pointer games: a touch drag steers the game instead of scrolling the page.
-      style={needsKeyboard ? undefined : { touchAction: "none" }}
-    />
-  );
-}
-
-const CLUSTER: { key: ControlKey; className: string }[] = [
-  { key: "↑", className: "kbd-up" },
-  { key: "←", className: "kbd-left" },
-  { key: "↓", className: "kbd-down" },
-  { key: "→", className: "kbd-right" },
-  { key: "SPACE", className: "kbd-space" },
-];
-
-function KeyboardRequired({ controls }: { controls: GameEntry["controls"] }) {
-  return (
-    <div className="kbd-required" role="status">
-      <div className="kbd-cluster" aria-hidden="true">
-        {CLUSTER.map(({ key, className }) => (
-          <span
-            key={key}
-            className={`kbd-key ${controls.keys.includes(key) ? "on " : ""}${className}`}
-          >
-            {key}
-          </span>
-        ))}
-      </div>
-      <div className="kbd-title pixel">KEYBOARD REQUIRED</div>
-      <p className="kbd-text">{controls.text}</p>
-    </div>
+    <>
+      <canvas
+        ref={canvasRef}
+        className="game-canvas"
+        width={entry.width}
+        height={entry.height}
+        aria-label={entry.ariaLabel}
+        // Pointer games: a touch drag steers the game instead of scrolling the page.
+        style={needsKeyboard ? undefined : { touchAction: "none" }}
+      />
+      {mode === "touch" &&
+        padSlot &&
+        createPortal(<TouchPad config={entry.touch} />, padSlot)}
+    </>
   );
 }

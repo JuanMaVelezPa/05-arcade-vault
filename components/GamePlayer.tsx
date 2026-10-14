@@ -28,6 +28,8 @@ export default function GamePlayer({ game }: GamePlayerProps) {
   const gameRef = useRef<GameHandle>(null);
   // Simulated games: running score, so the interval can bump the level without an effect on `score`.
   const simScoreRef = useRef(0);
+  const [padSlot, setPadSlot] = useState<HTMLDivElement | null>(null);
+  const [showNav, setShowNav] = useState(false);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [level, setLevel] = useState(1);
@@ -120,7 +122,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
   };
 
   return (
-    <div className="av-player fade-in">
+    <div className={`av-player fade-in${showNav ? " show-nav" : ""}`}>
       <div className="player-hud">
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
           <div className="hud-stat">
@@ -173,6 +175,14 @@ export default function GamePlayer({ game }: GamePlayerProps) {
               SKIN: {skin.toUpperCase()}
             </button>
           )}
+          <button
+            type="button"
+            className="btn hud-menu"
+            aria-pressed={showNav}
+            onClick={() => setShowNav(!showNav)}
+          >
+            {showNav ? "HIDE MENU" : "MENU"}
+          </button>
           <button type="button" className="btn yellow" onClick={togglePause}>
             {paused ? "RESUME" : "PAUSE"}
           </button>
@@ -193,6 +203,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
               ref={gameRef}
               muted={muted}
               skin={skin}
+              padSlot={padSlot}
               onHud={handleHud}
               onGameOver={handleGameOver}
               onPauseChange={setPaused}
@@ -246,6 +257,8 @@ export default function GamePlayer({ game }: GamePlayerProps) {
           <span>LOAD · 1MB</span>
         </div>
       </div>
+
+      {entry && <div ref={setPadSlot} className="touchpad-slot" />}
 
       {over && (
         <div className="modal-bd">

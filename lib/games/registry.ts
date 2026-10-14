@@ -4,15 +4,26 @@ import { createSnake } from "./snake/engine";
 import { createTetris } from "./tetris/engine";
 import type { CreateGame } from "./types";
 
-export type ControlKey = "←" | "→" | "↑" | "↓" | "SPACE";
+export type PadDirection = "up" | "down" | "left" | "right";
+
+export interface PadAction {
+  code: "Space" | "ArrowUp"; // KeyboardEvent.code sent to the engine
+  label: string; // caption under the button, e.g. "FIRE"
+}
+
+export interface TouchConfig {
+  dpad: PadDirection[]; // enabled directions, the rest render dimmed
+  a?: PadAction; // absent = dimmed and disabled
+  b?: PadAction;
+}
 
 export interface GameEntry {
   create: CreateGame;
   width: number; // logical canvas resolution
   height: number;
-  input: "keyboard" | "pointer"; // "keyboard" shows the touch-only notice
+  input: "keyboard" | "pointer"; // "keyboard" = no touch-drag steering
   ariaLabel: string; // canvas label, includes the controls
-  controls: { keys: ControlKey[]; text: string }; // content of the notice
+  touch: TouchConfig; // on-screen pad layout for touch-only devices
   levels?: number; // shows the pause-overlay level selector when set
   sound?: boolean; // shows the HUD mute toggle when true
   skins?: true; // shows the HUD skin button
@@ -28,9 +39,10 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     skins: true,
     ariaLabel:
       "Asteroids game. Arrow keys rotate and thrust, Space fires, P pauses.",
-    controls: {
-      keys: ["←", "→", "↑", "SPACE"],
-      text: "Asteroids is played with the arrow keys and Space. Open this page on a computer to play.",
+    touch: {
+      dpad: ["left", "right"],
+      a: { code: "Space", label: "FIRE" },
+      b: { code: "ArrowUp", label: "THRUST" },
     },
   },
   tetris: {
@@ -41,9 +53,10 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     skins: true,
     ariaLabel:
       "Tetris game. Left and right arrows move, Up or X rotates, Down soft drops, Space hard drops, P pauses.",
-    controls: {
-      keys: ["←", "→", "↑", "↓", "SPACE"],
-      text: "Tetris is played with the arrow keys and Space. Open this page on a computer to play.",
+    touch: {
+      dpad: ["left", "right", "down"],
+      a: { code: "ArrowUp", label: "ROTATE" },
+      b: { code: "Space", label: "DROP" },
     },
   },
   arkanoid: {
@@ -56,10 +69,7 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     skins: true,
     ariaLabel:
       "Arkanoid game. Move the mouse, drag a finger, or use the left and right arrows to move the paddle. P pauses.",
-    controls: {
-      keys: ["←", "→"],
-      text: "Arkanoid is played with the mouse, a finger, or the arrow keys.",
-    },
+    touch: { dpad: ["left", "right"] },
   },
   snake: {
     create: createSnake,
@@ -69,9 +79,6 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     levels: 5,
     skins: true,
     ariaLabel: "Snake game. Arrow keys or W, A, S, D turn the snake, P pauses.",
-    controls: {
-      keys: ["←", "↑", "→", "↓"],
-      text: "Snake is played with the arrow keys or W, A, S, D. Open this page on a computer to play.",
-    },
+    touch: { dpad: ["up", "down", "left", "right"] },
   },
 };
