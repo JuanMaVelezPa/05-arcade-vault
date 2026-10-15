@@ -32,13 +32,3 @@ npm run lint    # ESLint
    ```bash
    npx localtunnel --port 3000
    ```
-
-3. Get your public IP:
-
-   ```bash
-   curl ifconfig.me
-   ```
-
-4. Open the tunnel URL on your phone and enter the IP from step 3 as the Tunnel Password.
-
-`next.config.ts` needs `allowedDevOrigins: ["*.loca.lt"]` for the tunnel to work in dev.

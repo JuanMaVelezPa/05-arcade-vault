@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useEffectEvent, useRef, useState, useTransition } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { submitScore } from "@/app/actions/scores";
 import GameCanvas, { type GameHandle } from "@/components/games/GameCanvas";
 import { GAME_REGISTRY, type GameEntry } from "@/lib/games/registry";
@@ -23,7 +29,9 @@ const nextSkin = (s: Skin): Skin =>
 export default function GamePlayer({ game }: GamePlayerProps) {
   const router = useRouter();
   // Real canvas games come from the registry; every other id keeps the simulated arena.
-  const entry: GameEntry | undefined = Object.hasOwn(GAME_REGISTRY, game.id) ? GAME_REGISTRY[game.id] : undefined;
+  const entry: GameEntry | undefined = Object.hasOwn(GAME_REGISTRY, game.id)
+    ? GAME_REGISTRY[game.id]
+    : undefined;
   const isReal = entry !== undefined;
   const gameRef = useRef<GameHandle>(null);
   // Simulated games: running score, so the interval can bump the level without an effect on `score`.
@@ -61,9 +69,15 @@ export default function GamePlayer({ game }: GamePlayerProps) {
   useEffect(() => {
     if (!hasSound || over) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.code !== "KeyM" || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.code !== "KeyM" || e.repeat || e.ctrlKey || e.metaKey || e.altKey)
+        return;
       const t = e.target;
-      if (t instanceof HTMLElement && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName))) return;
+      if (
+        t instanceof HTMLElement &&
+        (t.isContentEditable ||
+          ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName))
+      )
+        return;
       toggleMute();
     };
     window.addEventListener("keydown", onKeyDown);
@@ -96,7 +110,11 @@ export default function GamePlayer({ game }: GamePlayerProps) {
   const save = () =>
     startSaving(async () => {
       try {
-        const result = await submitScore({ gameId: game.id, playerName: name, score });
+        const result = await submitScore({
+          gameId: game.id,
+          playerName: name,
+          score,
+        });
         if (result.ok) {
           setSaveError(null);
           setSaved(true);
@@ -189,7 +207,11 @@ export default function GamePlayer({ game }: GamePlayerProps) {
           <button type="button" className="btn magenta" onClick={endGame}>
             END
           </button>
-          <button type="button" className="btn ghost" onClick={() => router.push(`/game/${game.id}`)}>
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={() => router.push(`/game/${game.id}`)}
+          >
             EXIT
           </button>
         </div>
@@ -218,19 +240,35 @@ export default function GamePlayer({ game }: GamePlayerProps) {
             </div>
           )}
           {paused && (
-            <div className="crt-content" style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}>
+            <div
+              className="crt-content"
+              style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}
+            >
               <div>
                 <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
                   PAUSED
                 </div>
-                <div className="mono" style={{ fontSize: 11, color: "var(--ink-dim)", marginTop: 10, letterSpacing: "0.16em" }}>
-                  {isReal ? "PRESS P OR RESUME TO CONTINUE" : "PRESS RESUME TO CONTINUE"}
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: 11,
+                    color: "var(--ink-dim)",
+                    marginTop: 10,
+                    letterSpacing: "0.16em",
+                  }}
+                >
+                  {isReal
+                    ? "PRESS P OR RESUME TO CONTINUE"
+                    : "PRESS RESUME TO CONTINUE"}
                 </div>
                 {entry?.levels && (
                   <div className="level-jump">
                     <div className="level-jump-label">JUMP TO LEVEL</div>
                     <div className="level-jump-buttons">
-                      {Array.from({ length: entry.levels }, (_, i) => i + 1).map((n) => (
+                      {Array.from(
+                        { length: entry.levels },
+                        (_, i) => i + 1,
+                      ).map((n) => (
                         <button
                           key={n}
                           type="button"
@@ -251,9 +289,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
         </div>
         <div className="crt-bottom">
           <span className="led">SIGNAL OK</span>
-          <span>
-            {game.title} · CRT-83 · 60 HZ
-          </span>
+          <span>{game.title} · CRT-83 · 60 HZ</span>
           <span>LOAD · 1MB</span>
         </div>
       </div>
@@ -271,12 +307,19 @@ export default function GamePlayer({ game }: GamePlayerProps) {
                 <div className="input-row">
                   <input
                     value={name}
-                    onChange={(e) => setName(e.target.value.toUpperCase().slice(0, 10))}
+                    onChange={(e) =>
+                      setName(e.target.value.toUpperCase().slice(0, 10))
+                    }
                     placeholder="YOUR INITIALS"
                     aria-label="Your initials"
                     aria-describedby={saveError ? "save-error" : undefined}
                   />
-                  <button type="button" className="btn yellow" onClick={save} disabled={saving}>
+                  <button
+                    type="button"
+                    className="btn yellow"
+                    onClick={save}
+                    disabled={saving}
+                  >
                     {saving ? "SAVING…" : saveError ? "RETRY" : "SAVE SCORE"}
                   </button>
                 </div>

@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { getGame, getTopScores } from "@/lib/catalog";
 import { formatPlays } from "@/lib/format";
 
-export default async function GameDetailPage({ params }: PageProps<"/game/[id]">) {
+export default async function GameDetailPage({
+  params,
+}: PageProps<"/game/[id]">) {
   const { id } = await params;
   const [game, scores] = await Promise.all([getGame(id), getTopScores(id, 10)]);
   if (!game) notFound();
@@ -30,13 +32,25 @@ export default async function GameDetailPage({ params }: PageProps<"/game/[id]">
             </div>
             <div>
               <div className="l">Global Best</div>
-              <div className="v" style={{ color: "var(--magenta)", textShadow: "0 0 6px rgba(255,0,110,0.5)" }}>
+              <div
+                className="v"
+                style={{
+                  color: "var(--magenta)",
+                  textShadow: "0 0 6px rgba(255,0,110,0.5)",
+                }}
+              >
                 {game.best.toLocaleString("en-US")}
               </div>
             </div>
             <div>
               <div className="l">Difficulty</div>
-              <div className="v" style={{ color: "var(--yellow)", textShadow: "0 0 6px rgba(245,255,0,0.5)" }}>
+              <div
+                className="v"
+                style={{
+                  color: "var(--yellow)",
+                  textShadow: "0 0 6px rgba(245,255,0,0.5)",
+                }}
+              >
                 ★ ★ ★ ☆ ☆
               </div>
             </div>
@@ -55,13 +69,29 @@ export default async function GameDetailPage({ params }: PageProps<"/game/[id]">
       <aside>
         <div className="leaderboard">
           <h3>TOP SCORES</h3>
-          {scores.length === 0 && <div className="lb-empty pixel">NO SCORES YET — BE THE FIRST</div>}
+          {scores.length === 0 && (
+            <div className="lb-empty pixel">NO SCORES YET — BE THE FIRST</div>
+          )}
           {scores.map((r, i) => (
-            <div key={r.rank} className={"lb-row" + (i === 0 ? " top1" : i === 1 ? " top2" : i === 2 ? " top3" : "")}>
+            <div
+              key={r.rank}
+              className={
+                "lb-row" +
+                (i === 0 ? " top1" : i === 1 ? " top2" : i === 2 ? " top3" : "")
+              }
+            >
               <div className="rk">#{String(r.rank).padStart(2, "0")}</div>
               <div className="pl">
                 {r.name}
-                <div style={{ fontSize: 10, color: "var(--ink-faint)", letterSpacing: "0.1em" }}>{r.date}</div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: "var(--ink-faint)",
+                    letterSpacing: "0.1em",
+                  }}
+                >
+                  {r.date}
+                </div>
               </div>
               <div className="sc">{r.score.toLocaleString("en-US")}</div>
             </div>
