@@ -11,13 +11,18 @@ export default function GamesBrowser({ games }: { games: Game[] }) {
 
   const filtered = useMemo(() => {
     return games.filter(
-      (g) => (category === "ALL" || g.category === category) && g.title.toLowerCase().includes(query.toLowerCase())
+      (g) =>
+        (category === "ALL" || g.category === category) &&
+        g.title.toLowerCase().includes(query.toLowerCase()),
     );
   }, [games, query, category]);
 
   const categories = useMemo(
-    () => CATEGORIES.filter((c) => c === "ALL" || games.some((g) => g.category === c)),
-    [games]
+    () =>
+      CATEGORIES.filter(
+        (c) => c === "ALL" || games.some((g) => g.category === c),
+      ),
+    [games],
   );
 
   return (
@@ -32,7 +37,11 @@ export default function GamesBrowser({ games }: { games: Game[] }) {
       <div className="av-filters">
         <div className="av-search">
           <span className="ico">⌕</span>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search a game by name…" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search a game by name…"
+          />
         </div>
         <div className="av-chips">
           {categories.map((c) => (
@@ -53,8 +62,22 @@ export default function GamesBrowser({ games }: { games: Game[] }) {
           <GameCard key={g.id} game={g} />
         ))}
         {filtered.length === 0 && (
-          <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: 80, color: "var(--ink-faint)" }}>
-            <div className="pixel" style={{ fontSize: 14, color: "var(--magenta)", marginBottom: 12 }}>
+          <div
+            style={{
+              gridColumn: "1 / -1",
+              textAlign: "center",
+              padding: 80,
+              color: "var(--ink-faint)",
+            }}
+          >
+            <div
+              className="pixel"
+              style={{
+                fontSize: 14,
+                color: "var(--magenta)",
+                marginBottom: 12,
+              }}
+            >
               NO RESULTS
             </div>
             <div>Try a different search or category.</div>

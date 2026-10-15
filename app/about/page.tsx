@@ -16,7 +16,7 @@ function useReveal() {
           }
         });
       },
-      { threshold: 0.12 }
+      { threshold: 0.12 },
     );
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
@@ -47,7 +47,15 @@ function HighlightIcon({ kind }: { kind: string }) {
     return (
       <svg className="hl-icon" viewBox="0 0 16 16">
         <g fill={C}>
-          <rect x="1" y="2" width="14" height="12" fill="none" stroke={C} strokeWidth="1.4" />
+          <rect
+            x="1"
+            y="2"
+            width="14"
+            height="12"
+            fill="none"
+            stroke={C}
+            strokeWidth="1.4"
+          />
           <rect x="1" y="2" width="14" height="3" />
           <rect x="3" y="3" width="1" height="1" fill="#0a0a0f" />
           <rect x="5" y="3" width="1" height="1" fill="#0a0a0f" />
@@ -147,13 +155,18 @@ export default function About() {
         <div className="kicker pixel neon-yellow">▸ ABOUT</div>
         <h1 className="about-title">ABOUT ARCADE VAULT</h1>
         <p className="about-mission">
-          ARCADE VAULT was born from a love of classic video games. Our mission is to preserve and celebrate the
-          arcades that defined a generation, making them accessible to everyone, anywhere, at no cost.
+          ARCADE VAULT was born from a love of classic video games. Our mission
+          is to preserve and celebrate the arcades that defined a generation,
+          making them accessible to everyone, anywhere, at no cost.
         </p>
 
         <div className="highlight-row">
           {HIGHLIGHTS.map((h, i) => (
-            <div key={i} className={"highlight " + h.c} style={{ transitionDelay: i * 80 + "ms" }}>
+            <div
+              key={i}
+              className={"highlight " + h.c}
+              style={{ transitionDelay: i * 80 + "ms" }}
+            >
               <HighlightIcon kind={h.i} />
               <div className="hl-text pixel">{h.t}</div>
             </div>
@@ -179,7 +192,8 @@ export default function About() {
             <div className="kicker pixel neon-cyan">▸ CONTACT</div>
             <h2 className="contact-title">GET IN TOUCH</h2>
             <p className="contact-sub">
-              Have a suggestion, want to propose a game, or just want to say hi? Write to us.
+              Have a suggestion, want to propose a game, or just want to say hi?
+              Write to us.
             </p>
             <div className="contact-tips">
               <div className="tip">
@@ -194,7 +208,10 @@ export default function About() {
             </div>
           </div>
 
-          <form className={"contact-form" + (shake ? " shake" : "")} onSubmit={onSubmit}>
+          <form
+            className={"contact-form" + (shake ? " shake" : "")}
+            onSubmit={onSubmit}
+          >
             {status === "editing" || status === "submitting" ? (
               <>
                 <div className="field">
@@ -211,7 +228,9 @@ export default function About() {
                   <input
                     type="email"
                     value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, email: e.target.value })
+                    }
                     placeholder="player@vault.gg"
                     disabled={status === "submitting"}
                   />
@@ -221,12 +240,19 @@ export default function About() {
                   <textarea
                     rows={5}
                     value={form.message}
-                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, message: e.target.value })
+                    }
                     placeholder="Tell us what's on your mind…"
                     disabled={status === "submitting"}
                   ></textarea>
                 </div>
-                <button className="btn xl press" type="submit" style={{ width: "100%" }} disabled={status === "submitting"}>
+                <button
+                  className="btn xl press"
+                  type="submit"
+                  style={{ width: "100%" }}
+                  disabled={status === "submitting"}
+                >
                   {status === "submitting" ? "▶  SENDING…" : "▶  SEND MESSAGE"}
                 </button>
               </>
@@ -240,17 +266,23 @@ export default function About() {
                 </div>
                 <div className="term-body">
                   <div className="line">
-                    <span className="prompt">vault@arcade:~$</span> ./send_message --to=team
+                    <span className="prompt">vault@arcade:~$</span>{" "}
+                    ./send_message --to=team
                   </div>
                   <div className="line dim">[OK] Connecting to server…</div>
                   <div className="line dim">[OK] Validating content…</div>
                   <div className="line dim">[OK] Transmitting packet…</div>
                   <div className="line success">
-                    &gt; MESSAGE RECEIVED. WE&apos;LL GET BACK TO YOU SOON. THANKS, {sentName.toUpperCase()}.
+                    &gt; MESSAGE RECEIVED. WE&apos;LL GET BACK TO YOU SOON.
+                    THANKS, {sentName.toUpperCase()}.
                     <span className="caret">_</span>
                   </div>
                   <div style={{ marginTop: 18 }}>
-                    <button className="btn ghost" type="button" onClick={resetForm}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      onClick={resetForm}
+                    >
                       SEND ANOTHER MESSAGE
                     </button>
                   </div>
@@ -266,15 +298,21 @@ export default function About() {
                 </div>
                 <div className="term-body">
                   <div className="line">
-                    <span className="prompt">vault@arcade:~$</span> ./send_message --to=team
+                    <span className="prompt">vault@arcade:~$</span>{" "}
+                    ./send_message --to=team
                   </div>
                   <div className="line dim">[OK] Connecting to server…</div>
                   <div className="line dim">[FAIL] Transmission failed…</div>
                   <div className="error">
-                    &gt; MESSAGE NOT SENT. SOMETHING WENT WRONG.<span className="caret">_</span>
+                    &gt; MESSAGE NOT SENT. SOMETHING WENT WRONG.
+                    <span className="caret">_</span>
                   </div>
                   <div style={{ marginTop: 18 }}>
-                    <button className="btn ghost" type="button" onClick={() => setStatus("editing")}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      onClick={() => setStatus("editing")}
+                    >
                       TRY AGAIN
                     </button>
                   </div>

@@ -15,7 +15,10 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid request body." },
+      { status: 400 },
+    );
   }
 
   const name = typeof body.name === "string" ? body.name.trim() : "";
@@ -23,11 +26,17 @@ export async function POST(request: Request) {
   const message = typeof body.message === "string" ? body.message.trim() : "";
 
   if (!name || !email || !message) {
-    return NextResponse.json({ error: "Name, email, and message are required." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Name, email, and message are required." },
+      { status: 400 },
+    );
   }
 
   if (!EMAIL_REGEX.test(email)) {
-    return NextResponse.json({ error: "Please provide a valid email address." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Please provide a valid email address." },
+      { status: 400 },
+    );
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
@@ -42,11 +51,17 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      return NextResponse.json({ error: "Failed to send message. Please try again." }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to send message. Please try again." },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch {
-    return NextResponse.json({ error: "Failed to send message. Please try again." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to send message. Please try again." },
+      { status: 500 },
+    );
   }
 }

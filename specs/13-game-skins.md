@@ -57,17 +57,17 @@ Neon values below equal what the engines draw today. Retro tones: Game Boy `#0f3
 
 ### Asteroids
 
-| Element                      | neon                  | classic   | retro     |
-| ---------------------------- | --------------------- | --------- | --------- |
-| bg / bg2                     | `#0a0030` / `#000000` | `#000000` | `#1a0f00` |
-| ship outline                 | `#00f5ff`             | `#ffffff` | `#ffb000` |
-| bullet                       | `#00f5ff`             | `#ffffff` | `#ffb000` |
-| ship explosion               | `#00f5ff`             | `#ffffff` | `#ffb000` |
-| ship spawn shield            | `#00f5ff`             | `#ffffff` | `#c27c00` |
-| thrust flame stroke          | `rgba(255,140,0,0.9)` | `#ffffff` | `#c27c00` |
-| thrust flame glow            | `#ff8c00`             | none      | none      |
-| asteroid size 1 and 3        | `#ff006e`             | `#ffffff` | `#c27c00` |
-| asteroid size 2              | `#f5ff00`             | `#ffffff` | `#ffb000` |
+| Element               | neon                  | classic   | retro     |
+| --------------------- | --------------------- | --------- | --------- |
+| bg / bg2              | `#0a0030` / `#000000` | `#000000` | `#1a0f00` |
+| ship outline          | `#00f5ff`             | `#ffffff` | `#ffb000` |
+| bullet                | `#00f5ff`             | `#ffffff` | `#ffb000` |
+| ship explosion        | `#00f5ff`             | `#ffffff` | `#ffb000` |
+| ship spawn shield     | `#00f5ff`             | `#ffffff` | `#c27c00` |
+| thrust flame stroke   | `rgba(255,140,0,0.9)` | `#ffffff` | `#c27c00` |
+| thrust flame glow     | `#ff8c00`             | none      | none      |
+| asteroid size 1 and 3 | `#ff006e`             | `#ffffff` | `#c27c00` |
+| asteroid size 2       | `#f5ff00`             | `#ffffff` | `#ffb000` |
 | other white (`WHITE`) | `#ffffff`             | `#ffffff` | `#ffb000` |
 
 ### Tetris

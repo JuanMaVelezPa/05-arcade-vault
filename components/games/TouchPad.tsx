@@ -111,7 +111,7 @@ export default function TouchPad({ config }: { config: TouchConfig }) {
 
   return (
     <div
-      className="touchpad"
+      className={`touchpad${config.a || config.b ? "" : " touchpad--dpad-only"}`}
       data-testid="touchpad"
       onContextMenu={(e) => e.preventDefault()}
       style={{
