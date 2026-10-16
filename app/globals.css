@@ -3329,13 +3329,15 @@ a {
   width: min(240px, 62vw);
 }
 
-/* ===== touch pad (spec 15): D-pad + A/B buttons below the CRT, touch-only ===== */
+/* ===== touch pad (spec 15, MK-II look spec 17): D-pad + A/B buttons below the CRT, touch-only ===== */
 .touchpad-slot:not(:empty) {
   margin-top: 16px;
 }
 .touchpad {
-  --cell: clamp(44px, 13.5vw, 64px);
-  --round: clamp(54px, 16vw, 76px);
+  /* reference sizes (key 50px, A/B 74px) are caps; they shrink with the viewport, 44px floor */
+  --cell: clamp(44px, 13vw, 50px);
+  --round: clamp(54px, 16vw, 74px);
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3343,149 +3345,244 @@ a {
   max-width: 480px;
   margin: 0 auto;
   padding: 16px clamp(12px, 4vw, 28px) 12px;
-  background: linear-gradient(180deg, var(--bg-2), var(--bg));
+  background: linear-gradient(180deg, #1c1c28 0%, #0c0c14 100%);
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: 22px;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 12px 40px -18px rgba(0, 245, 255, 0.3);
+    0 30px 80px -30px rgba(0, 245, 255, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.6);
+}
+.touchpad::before {
+  /* inner glow frame */
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(0, 245, 255, 0.14);
+  border-radius: 18px;
+  pointer-events: none;
+}
+.touchpad::after {
+  /* dot texture */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px
+  );
+  background-size: 8px 8px;
+  border-radius: inherit;
+  opacity: 0.6;
+  pointer-events: none;
 }
 .touchpad-btn {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0;
-  font-family: var(--pixel);
-  color: var(--cyan);
-  background: var(--bg-3);
-  border: 2px solid var(--cyan);
-  text-shadow: 0 0 6px rgba(0, 245, 255, 0.7);
-  box-shadow:
-    0 4px 0 rgba(0, 245, 255, 0.28),
-    0 0 12px rgba(0, 245, 255, 0.3),
-    inset 0 0 8px rgba(0, 245, 255, 0.15);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
-    transform 60ms,
-    box-shadow 60ms,
-    background 60ms;
-}
-.touchpad-btn:active:not(:disabled) {
-  transform: translateY(3px);
-  background: rgba(0, 245, 255, 0.18);
-  box-shadow:
-    0 1px 0 rgba(0, 245, 255, 0.28),
-    0 0 18px rgba(0, 245, 255, 0.55),
-    inset 0 0 12px rgba(0, 245, 255, 0.3);
+    transform 80ms,
+    box-shadow 140ms,
+    color 140ms,
+    border-color 140ms,
+    background 140ms;
 }
 .touchpad-btn:focus-visible {
   outline: 2px solid var(--yellow);
   outline-offset: 3px;
 }
 .touchpad-btn:disabled {
-  opacity: 0.25;
+  opacity: 0.3;
   cursor: default;
-  color: var(--ink-faint);
-  border-color: var(--ink-faint);
-  text-shadow: none;
-  box-shadow: none;
 }
+
+/* D-pad: four raised keys around a decorative hub */
 .touchpad-dpad {
   position: relative;
+  z-index: 1;
   display: grid;
-  grid-template:
-    "." var(--cell) "." var(--cell) "." var(--cell) / var(--cell)
-    var(--cell) var(--cell);
+  grid-template-columns: repeat(3, var(--cell));
+  grid-template-rows: repeat(3, var(--cell));
   grid-template-areas: ". up ." "left hub right" ". down .";
-}
-.touchpad-dpad::before {
-  /* hub joining the four arms */
-  content: "";
-  grid-area: hub;
-  background: var(--bg-3);
-  border-block: 2px solid var(--cyan);
-  border-radius: 0;
-  opacity: 0.6;
+  gap: 3px;
 }
 .touchpad-dir {
   width: var(--cell);
   height: var(--cell);
-  font-size: clamp(16px, 5vw, 22px);
+  color: var(--ink-dim);
+  background: linear-gradient(180deg, #1a1a25, #0a0a12);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  box-shadow:
+    0 4px 0 #050507,
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6);
+}
+.touchpad-arrow {
+  width: 44%;
+  height: 44%;
+  pointer-events: none;
+  transition: filter 140ms;
+}
+.touchpad-dir:active:not(:disabled) {
+  transform: translateY(3px);
+  color: var(--cyan);
+  background: linear-gradient(180deg, #08161e, #030a0e);
+  border-color: var(--cyan);
+  box-shadow:
+    0 1px 0 #050507,
+    inset 0 0 16px rgba(0, 245, 255, 0.45),
+    0 0 16px rgba(0, 245, 255, 0.5);
+}
+.touchpad-dir:active:not(:disabled) .touchpad-arrow {
+  filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 12px var(--cyan));
+}
+.touchpad-dir:disabled {
+  box-shadow: 0 4px 0 #050507;
 }
 .touchpad-up {
   grid-area: up;
-  border-radius: 12px 12px 0 0;
 }
 .touchpad-down {
   grid-area: down;
-  border-radius: 0 0 12px 12px;
 }
 .touchpad-left {
   grid-area: left;
-  border-radius: 12px 0 0 12px;
 }
 .touchpad-right {
   grid-area: right;
-  border-radius: 0 12px 12px 0;
 }
+.touchpad-hub {
+  grid-area: hub;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 50%, #181822 0%, #08080d 80%);
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 12px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+}
+.touchpad-hub-gem {
+  width: 12px;
+  height: 12px;
+  background: var(--cyan);
+  box-shadow:
+    0 0 10px var(--cyan),
+    inset 0 0 4px rgba(0, 0, 0, 0.5);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  animation: touchpad-pulse-led 2s ease-in-out infinite;
+}
+@keyframes touchpad-pulse-led {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .touchpad-hub-gem {
+    animation: none;
+  }
+}
+
+/* A/B: round glowing buttons, A magenta and B cyan */
 .touchpad-actions {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: flex-start;
-  gap: clamp(6px, 2.5vw, 16px);
+  gap: clamp(14px, 4vw, 22px);
 }
 .touchpad-action {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 .touchpad-b {
   margin-top: calc(var(--round) * 0.5);
 } /* B sits lower-left, A upper-right */
+.touchpad-a {
+  --ab-color: var(--magenta);
+  --ab-mid: rgba(255, 0, 110, 0.7);
+  --ab-deep: rgba(110, 0, 40, 0.95);
+  --ab-glow: rgba(255, 0, 110, 0.4);
+}
+.touchpad-b {
+  --ab-color: var(--cyan);
+  --ab-mid: rgba(0, 200, 230, 0.7);
+  --ab-deep: rgba(0, 50, 70, 0.95);
+  --ab-glow: rgba(0, 245, 255, 0.4);
+}
 .touchpad-round {
+  position: relative;
   width: var(--round);
   height: var(--round);
   border-radius: 50%;
-  font-size: clamp(14px, 4.4vw, 18px);
-}
-.touchpad-a .touchpad-round {
-  color: var(--magenta);
-  border-color: var(--magenta);
-  text-shadow: 0 0 6px rgba(255, 0, 110, 0.7);
+  color: var(--ab-color);
+  border: 2px solid var(--ab-color);
+  background:
+    radial-gradient(
+      circle at 32% 26%,
+      rgba(255, 255, 255, 0.25),
+      transparent 50%
+    ),
+    radial-gradient(circle at 50% 55%, var(--ab-mid), var(--ab-deep) 75%);
   box-shadow:
-    0 4px 0 rgba(255, 0, 110, 0.3),
-    0 0 12px rgba(255, 0, 110, 0.35),
-    inset 0 0 8px rgba(255, 0, 110, 0.15);
+    0 6px 0 #050507,
+    0 0 22px var(--ab-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.4);
 }
-.touchpad-a .touchpad-round:active:not(:disabled) {
-  background: rgba(255, 0, 110, 0.2);
+.touchpad-letter {
+  position: relative;
+  z-index: 1;
+  font-family: var(--pixel);
+  font-size: calc(var(--round) * 0.27); /* letter scales with the button */
+  /* glyph leaves an empty pixel column on the right: pad the left to center the ink */
+  padding-left: 0.125em;
+  color: #fff;
+  text-shadow:
+    0 0 8px var(--ab-color),
+    0 0 18px var(--ab-color),
+    0 1px 0 rgba(0, 0, 0, 0.6);
+}
+.touchpad-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1px dashed var(--ab-color);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 140ms,
+    transform 200ms;
+}
+.touchpad-round:active:not(:disabled) {
+  transform: translateY(4px) scale(0.97);
   box-shadow:
-    0 1px 0 rgba(255, 0, 110, 0.3),
-    0 0 18px rgba(255, 0, 110, 0.6),
-    inset 0 0 12px rgba(255, 0, 110, 0.3);
+    0 1px 0 #050507,
+    0 0 36px var(--ab-glow),
+    inset 0 0 18px rgba(0, 0, 0, 0.5);
 }
-.touchpad-b .touchpad-round {
-  color: var(--yellow);
-  border-color: var(--yellow);
-  text-shadow: 0 0 6px rgba(245, 255, 0, 0.6);
-  box-shadow:
-    0 4px 0 rgba(245, 255, 0, 0.28),
-    0 0 12px rgba(245, 255, 0, 0.3),
-    inset 0 0 8px rgba(245, 255, 0, 0.12);
+.touchpad-round:active:not(:disabled) .touchpad-ring {
+  opacity: 1;
+  transform: scale(1.08);
 }
-.touchpad-b .touchpad-round:active:not(:disabled) {
-  background: rgba(245, 255, 0, 0.16);
-  box-shadow:
-    0 1px 0 rgba(245, 255, 0, 0.28),
-    0 0 18px rgba(245, 255, 0, 0.55),
-    inset 0 0 12px rgba(245, 255, 0, 0.25);
-}
-.touchpad-a .touchpad-round:disabled,
-.touchpad-b .touchpad-round:disabled {
+.touchpad-round:disabled {
   color: var(--ink-faint);
   border-color: var(--ink-faint);
+  box-shadow: 0 6px 0 #050507;
+}
+.touchpad-round:disabled .touchpad-letter {
+  color: var(--ink-faint);
   text-shadow: none;
-  box-shadow: none;
 }
 .touchpad-caption {
   font-family: var(--mono);
@@ -3601,9 +3698,13 @@ body:has(.touchpad) .av-footer {
   .av-player:has(.touchpad) .touchpad {
     display: contents;
   }
+  .av-player:has(.touchpad) .touchpad::before,
+  .av-player:has(.touchpad) .touchpad::after {
+    content: none;
+  }
   .av-player:has(.touchpad) .touchpad {
-    --cell: clamp(44px, 14dvh, 64px);
-    --round: clamp(54px, 15dvh, 76px);
+    --cell: clamp(44px, 14dvh, 50px);
+    --round: clamp(54px, 15dvh, 74px);
   }
   .av-player:has(.touchpad) .touchpad-dpad {
     grid-column: 1;
