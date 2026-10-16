@@ -1,5 +1,6 @@
 import { createArkanoid } from "./arkanoid/engine";
 import { createAsteroids } from "./asteroids/engine";
+import { createFrogger } from "./frogger/engine";
 import { createSnake } from "./snake/engine";
 import { createTetris } from "./tetris/engine";
 import type { CreateGame } from "./types";
@@ -79,6 +80,15 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     levels: 5,
     skins: true,
     ariaLabel: "Snake game. Arrow keys or W, A, S, D turn the snake, P pauses.",
+    touch: { dpad: ["up", "down", "left", "right"] },
+  },
+  frogger: {
+    create: createFrogger,
+    width: 640,
+    height: 560,
+    input: "keyboard",
+    ariaLabel:
+      "Frogger game. Arrow keys or W, A, S, D hop the frog one cell, P pauses.",
     touch: { dpad: ["up", "down", "left", "right"] },
   },
 };

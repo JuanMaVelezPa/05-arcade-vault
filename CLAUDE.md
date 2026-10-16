@@ -48,6 +48,8 @@ To check that a new game works on mobile (portrait and landscape) and desktop, a
 
 To compare two spec ideas for one game, use the project skill `/game-jam <idea>` (`.claude/skills/game-jam/`). It runs two `game-jam` agents (`.claude/agents/game-jam.md`) in parallel, writes `NN-<game-id>-option-a.md` and `NN-<game-id>-option-b.md` (NN = next spec number) in `specs/game-jam/<game-id>/`, then judges them and writes `NN-<game-id>-verdict.md`. Promote the winner to `specs/NN-slug.md` yourself.
 
+To implement an approved game spec and audit it in one go, use the project skill `/spec-impl-game <spec>` (`.claude/skills/spec-impl-game/`). It follows the `/spec-impl` flow, then runs `@skin-designer` and after it returns `@mobile-porter` (sequentially, never in parallel).
+
 ## Styles
 
 Always use `/frontend-design` to build user interfaces.
