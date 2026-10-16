@@ -44,6 +44,8 @@ To add a new game from `references/started-games/<folder>`, use the project skil
 
 To decide which game to add next, ask the project agent `@game-planner` (`.claude/agents/game-planner.md`). It ranks candidates against the catalog and logs every suggestion and its status in `references/game-suggestions-todo.md`; its pick then feeds `/add-arcade-game`.
 
+To check that a new game works on mobile (portrait and landscape) and desktop, ask the project agent `@mobile-porter` (`.claude/agents/mobile-porter.md`), usually after `/add-arcade-game`. It audits the game against `specs/15-touch-controls.md` (and 14, 16), logs the result in `references/game-mobile.md`, and writes a Draft spec for any gap, like `@skin-designer`. Run it with the dev server up for the browser checks; implement its spec with `/spec-impl`.
+
 To compare two spec ideas for one game, use the project skill `/game-jam <idea>` (`.claude/skills/game-jam/`). It runs two `game-jam` agents (`.claude/agents/game-jam.md`) in parallel, writes `NN-<game-id>-option-a.md` and `NN-<game-id>-option-b.md` (NN = next spec number) in `specs/game-jam/<game-id>/`, then judges them and writes `NN-<game-id>-verdict.md`. Promote the winner to `specs/NN-slug.md` yourself.
 
 ## Styles
