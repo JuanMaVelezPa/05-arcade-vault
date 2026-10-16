@@ -10,11 +10,11 @@ const DPAD_KEYS: Record<PadDirection, { code: string; key: string }> = {
   left: { code: "ArrowLeft", key: "ArrowLeft" },
   right: { code: "ArrowRight", key: "ArrowRight" },
 };
-const DPAD_LABELS: Record<PadDirection, string> = {
-  up: "↑",
-  down: "↓",
-  left: "←",
-  right: "→",
+const DPAD_ARROWS: Record<PadDirection, string> = {
+  up: "M12 4 L20 16 L4 16 Z",
+  down: "M4 8 L20 8 L12 20 Z",
+  left: "M16 4 L16 20 L4 12 Z",
+  right: "M8 4 L20 12 L8 20 Z",
 };
 const DPAD_ORDER: PadDirection[] = ["up", "left", "right", "down"];
 
@@ -133,10 +133,19 @@ export default function TouchPad({ config }: { config: TouchConfig }) {
               disabled={!config.dpad.includes(dir)}
               {...bind(`dpad-${dir}`, code, key, true)}
             >
-              {DPAD_LABELS[dir]}
+              <svg
+                className="touchpad-arrow"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d={DPAD_ARROWS[dir]} fill="currentColor" />
+              </svg>
             </button>
           );
         })}
+        <div className="touchpad-hub" aria-hidden="true">
+          <span className="touchpad-hub-gem" />
+        </div>
       </div>
       <div
         className="touchpad-actions"
@@ -165,7 +174,10 @@ export default function TouchPad({ config }: { config: TouchConfig }) {
                     )
                   : {})}
               >
-                {slot.toUpperCase()}
+                <span className="touchpad-ring" aria-hidden="true" />
+                <span className="touchpad-letter" aria-hidden="true">
+                  {slot.toUpperCase()}
+                </span>
               </button>
               <span className="touchpad-caption">{action?.label ?? "—"}</span>
             </div>
