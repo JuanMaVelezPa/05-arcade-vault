@@ -2,7 +2,7 @@
 // Framework-free: owns the canvas, the rAF loop, and its keyboard listeners.
 // All state lives inside createFrogger().
 
-import type { GameCallbacks, GameEngine, GameHud } from "../types";
+import type { GameCallbacks, GameEngine, GameHud, Skin } from "../types";
 import {
   BASE_TIME_MS,
   CELL,
@@ -36,7 +36,9 @@ import {
   type Lane,
 } from "./constants";
 import { checkGoal, checkRoadCollision, getSupport } from "./collisions";
+import { drawScanlines } from "../scanlines";
 import { buildLanes, isSubmerged } from "./lanes";
+import { SKINS, type Palette } from "./skins";
 
 type GameState = "playing" | "paused" | "gameover";
 
@@ -65,34 +67,6 @@ const SCROLL_KEYS = new Set([
   "ArrowLeft",
   "ArrowRight",
 ]);
-
-// ── Palette (neon) ────────────────────────────────────────────────────────────
-const C = {
-  road: "#0c0c16",
-  roadLine: "rgba(230, 233, 255, 0.22)",
-  river: "#00203a",
-  riverWave: "rgba(0, 245, 255, 0.14)",
-  safe: "#0b3a1f",
-  safeDot: "rgba(0, 255, 136, 0.22)",
-  goalBank: "#0a3d20",
-  goalMouth: "#2a9d5c",
-  goalEdge: "#ffcf3a",
-  frog: "#00ff88",
-  frogDark: "#00a85a",
-  eyeWhite: "#ffffff",
-  eyePupil: "#0a0a0f",
-  log: "#8a5a2b",
-  logLine: "#5c3a18",
-  turtle: "#1fbf6a",
-  turtleShell: "#0f7a40",
-  truck: "#9aa4b8",
-  truckCab: "#ff006e",
-  cars: ["#ff3b3b", "#f5ff00", "#00f5ff"],
-  text: "#e6e9ff",
-  timeOk: "#00ff88",
-  timeMid: "#f5ff00",
-  timeLow: "#ff006e",
-} as const;
 
 const HUD_H = 14; // top strip of row 0 reserved for the in-canvas HUD
 const TIME_BAR_H = 6; // bottom strip of the start row
@@ -149,6 +123,8 @@ export function createFrogger(
   let rafId: number | null = null;
   let lastTime: number | null = null;
   let destroyed = false;
+  let palette: Palette = SKINS.neon;
+  let retro = false; // draws the CRT scanlines last
 
   // ── Game logic ──────────────────────────────────────────────────────────────
   function addScore(points: number) {
@@ -300,14 +276,14 @@ export function createFrogger(
       ctx.fillStyle = color;
       ctx.fillRect(0, r0 * CELL, W, (r1 - r0 + 1) * CELL);
     };
-    band(ROW_GOALS, ROW_GOALS, C.goalBank);
-    band(ROW_RIVER_TOP, ROW_RIVER_BOT, C.river);
-    band(ROW_SAFE_MID, ROW_SAFE_MID, C.safe);
-    band(ROW_ROAD_TOP, ROW_ROAD_BOT, C.road);
-    band(ROW_START, ROW_START, C.safe);
+    band(ROW_GOALS, ROW_GOALS, palette.goalBank);
+    band(ROW_RIVER_TOP, ROW_RIVER_BOT, palette.river);
+    band(ROW_SAFE_MID, ROW_SAFE_MID, palette.safe);
+    band(ROW_ROAD_TOP, ROW_ROAD_BOT, palette.road);
+    band(ROW_START, ROW_START, palette.safe);
 
     // River ripples.
-    ctx.strokeStyle = C.riverWave;
+    ctx.strokeStyle = palette.riverWave;
     ctx.lineWidth = 2;
     for (let r = ROW_RIVER_TOP; r <= ROW_RIVER_BOT; r++) {
       for (let x = ((r * 23) % 60) - 30; x < W; x += 60) {
@@ -324,7 +300,7 @@ export function createFrogger(
     }
 
     // Dashed lane dividers on the road.
-    ctx.strokeStyle = C.roadLine;
+    ctx.strokeStyle = palette.roadLine;
     ctx.lineWidth = 2;
     ctx.setLineDash([14, 14]);
     for (let r = ROW_ROAD_TOP + 1; r <= ROW_ROAD_BOT; r++) {
@@ -336,7 +312,7 @@ export function createFrogger(
     ctx.setLineDash([]);
 
     // Grass dots on both safe rows.
-    ctx.fillStyle = C.safeDot;
+    ctx.fillStyle = palette.safeDot;
     for (const r of [ROW_SAFE_MID, ROW_START]) {
       for (let x = 10; x < W; x += 40) ctx.fillRect(x, r * CELL + 12, 3, 3);
       for (let x = 30; x < W; x += 40) ctx.fillRect(x, r * CELL + 28, 3, 3);
@@ -349,9 +325,9 @@ export function createFrogger(
       const y = ROW_GOALS * CELL + HUD_H;
       const w = GOAL_WIDTH * CELL;
       const h = CELL - HUD_H;
-      ctx.fillStyle = C.goalMouth;
+      ctx.fillStyle = palette.goalMouth;
       ctx.fillRect(x, y, w, h);
-      ctx.strokeStyle = C.goalEdge;
+      ctx.strokeStyle = palette.goalEdge;
       ctx.lineWidth = 2;
       ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
       if (goals[i]) drawFrogShape(x + w / 2, y + h / 2, 0.7, false);
@@ -362,12 +338,12 @@ export function createFrogger(
     const x = e.col * CELL;
     const y = lane.row * CELL;
     const w = e.width * CELL;
-    ctx.fillStyle = C.cars[index % C.cars.length];
+    ctx.fillStyle = palette.cars[index % palette.cars.length];
     ctx.fillRect(x + 3, y + 8, w - 6, CELL - 16);
-    ctx.fillStyle = "rgba(0, 0, 0, 0.35)"; // windscreen
+    ctx.fillStyle = palette.windscreen;
     const front = lane.dir > 0 ? x + w - 14 : x + 6;
     ctx.fillRect(front, y + 11, 8, CELL - 22);
-    ctx.fillStyle = "#0a0a0f"; // wheels
+    ctx.fillStyle = palette.wheel;
     ctx.fillRect(x + 7, y + 5, 8, 4);
     ctx.fillRect(x + w - 15, y + 5, 8, 4);
     ctx.fillRect(x + 7, y + CELL - 9, 8, 4);
@@ -379,16 +355,16 @@ export function createFrogger(
     const y = lane.row * CELL;
     const w = e.width * CELL;
     const cabW = CELL - 6;
-    ctx.fillStyle = C.truck;
+    ctx.fillStyle = palette.truck;
     ctx.fillRect(x + 2, y + 6, w - 4, CELL - 12);
-    ctx.fillStyle = C.truckCab;
+    ctx.fillStyle = palette.truckCab;
     ctx.fillRect(
       lane.dir > 0 ? x + w - cabW - 2 : x + 2,
       y + 6,
       cabW,
       CELL - 12,
     );
-    ctx.fillStyle = "#0a0a0f";
+    ctx.fillStyle = palette.wheel;
     for (let wx = x + 8; wx < x + w - 10; wx += CELL) {
       ctx.fillRect(wx, y + 3, 8, 4);
       ctx.fillRect(wx, y + CELL - 7, 8, 4);
@@ -399,11 +375,11 @@ export function createFrogger(
     const x = e.col * CELL;
     const y = lane.row * CELL;
     const w = e.width * CELL;
-    ctx.fillStyle = C.log;
+    ctx.fillStyle = palette.log;
     ctx.beginPath();
     ctx.roundRect(x + 2, y + 6, w - 4, CELL - 12, 8);
     ctx.fill();
-    ctx.strokeStyle = C.logLine;
+    ctx.strokeStyle = palette.logLine;
     ctx.lineWidth = 2;
     for (let lx = x + 14; lx < x + w - 8; lx += 16) {
       ctx.beginPath();
@@ -418,22 +394,22 @@ export function createFrogger(
       const cx = (e.col + i + 0.5) * CELL;
       const cy = lane.row * CELL + CELL / 2;
       if (e.submerged) {
-        ctx.strokeStyle = "rgba(31, 191, 106, 0.3)";
+        ctx.strokeStyle = palette.turtleDive;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(cx, cy, 14, 0, Math.PI * 2);
         ctx.stroke();
         continue;
       }
-      ctx.fillStyle = C.turtle;
+      ctx.fillStyle = palette.turtle;
       ctx.beginPath();
       ctx.arc(cx + lane.dir * 12, cy, 5, 0, Math.PI * 2); // head
       ctx.fill();
-      ctx.fillStyle = C.turtleShell;
+      ctx.fillStyle = palette.turtleShell;
       ctx.beginPath();
       ctx.arc(cx, cy, 14, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = C.turtle;
+      ctx.strokeStyle = palette.turtle;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(cx - 8, cy);
@@ -460,22 +436,22 @@ export function createFrogger(
     ctx.save();
     ctx.translate(cx, cy);
     ctx.scale(scale, scale);
-    ctx.fillStyle = C.frogDark; // legs
+    ctx.fillStyle = palette.frogDark; // legs
     const spread = hop ? 6 : 0;
     ctx.fillRect(-18 - spread / 2, -11 - spread, 8, 8);
     ctx.fillRect(10 + spread / 2, -11 - spread, 8, 8);
     ctx.fillRect(-18 - spread / 2, 4 + spread, 8, 8);
     ctx.fillRect(10 + spread / 2, 4 + spread, 8, 8);
-    ctx.fillStyle = C.frog; // body 28 × 24
+    ctx.fillStyle = palette.frog; // body 28 × 24
     ctx.beginPath();
     ctx.ellipse(0, 0, 14, 12, 0, 0, Math.PI * 2);
     ctx.fill();
     for (const ex of [-6, 6]) {
-      ctx.fillStyle = C.eyeWhite;
+      ctx.fillStyle = palette.eyeWhite;
       ctx.beginPath();
       ctx.arc(ex, -9, 4, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = C.eyePupil;
+      ctx.fillStyle = palette.eyePupil;
       ctx.beginPath();
       ctx.arc(ex, -10, 2, 0, Math.PI * 2);
       ctx.fill();
@@ -495,16 +471,16 @@ export function createFrogger(
   }
 
   function drawHud() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+    ctx.fillStyle = palette.hudStrip;
     ctx.fillRect(0, 0, W, HUD_H);
-    ctx.fillStyle = C.text;
+    ctx.fillStyle = palette.text;
     ctx.font = "bold 10px 'JetBrains Mono', monospace";
     ctx.textBaseline = "middle";
     ctx.textAlign = "left";
     ctx.fillText(`SCORE ${score}`, 8, HUD_H / 2 + 1);
     ctx.textAlign = "center";
     ctx.fillText(`LEVEL ${level}`, W / 2, HUD_H / 2 + 1);
-    ctx.fillStyle = C.frog;
+    ctx.fillStyle = palette.frog;
     for (let i = 0; i < lives; i++) {
       ctx.beginPath();
       ctx.arc(W - 12 - i * 16, HUD_H / 2, 5, 0, Math.PI * 2);
@@ -514,7 +490,11 @@ export function createFrogger(
     // Time bar along the bottom edge of the start row.
     const ratio = Math.max(0, timeLeftMs / timeLimitMs(level));
     ctx.fillStyle =
-      ratio > 0.5 ? C.timeOk : ratio > 0.25 ? C.timeMid : C.timeLow;
+      ratio > 0.5
+        ? palette.timeOk
+        : ratio > 0.25
+          ? palette.timeMid
+          : palette.timeLow;
     ctx.fillRect(0, H - TIME_BAR_H, W * ratio, TIME_BAR_H);
   }
 
@@ -524,6 +504,7 @@ export function createFrogger(
     drawLanes();
     drawFrog();
     drawHud();
+    if (retro) drawScanlines(ctx, W, H);
   }
 
   // ── HUD reporting ───────────────────────────────────────────────────────────
@@ -625,6 +606,12 @@ export function createFrogger(
       // The shell resets its HUD on PLAY AGAIN, so always send a fresh one.
       lastHud = null;
       emitHud();
+    },
+    setSkin(skin: Skin) {
+      if (destroyed) return;
+      palette = SKINS[skin];
+      retro = skin === "retro";
+      draw(); // repaint now, also while paused
     },
     destroy() {
       destroyed = true;

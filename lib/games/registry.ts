@@ -87,6 +87,7 @@ export const GAME_REGISTRY: Record<string, GameEntry> = {
     width: 640,
     height: 560,
     input: "keyboard",
+    skins: true,
     ariaLabel:
       "Frogger game. Arrow keys or W, A, S, D hop the frog one cell, P pauses.",
     touch: { dpad: ["up", "down", "left", "right"] },

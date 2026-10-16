@@ -1,6 +1,6 @@
 # 18 — Frogger Skins (neon, classic, retro)
 
-**State:** Approved
+**State:** Implemented
 **Depends on:** 13-game-skins, 17-gamepad-mk2-touch-skin
 **Date:** 2026-10-16
 
@@ -94,14 +94,14 @@ Neon draws no `shadowBlur` today, so `glow` stays `null` in all skins. The field
 
 ## Acceptance criteria
 
-- [ ] `lib/games/frogger/skins.ts` exports `SKINS` with `neon`, `classic`, `retro`, each with every field of `Palette`.
-- [ ] `grep -nE '#[0-9a-fA-F]{3,8}|rgba?\(' lib/games/frogger/engine.ts` finds no color literal outside comments.
-- [ ] `setSkin` exists and a paused game repaints right away with the new palette.
-- [ ] The SKIN button shows on `/player/frogger` and cycles neon, classic, retro.
-- [ ] Neon looks identical to today (compare screenshots).
-- [ ] Retro draws scanlines last; retro uses only the 4 tones; classic and retro have no `shadowBlur` above 0.
-- [ ] Hops, river carry, hazards, goals and the time bar are unchanged in every skin.
-- [ ] `npm run lint` and `npm run build` pass.
+- [x] `lib/games/frogger/skins.ts` exports `SKINS` with `neon`, `classic`, `retro`, each with every field of `Palette`.
+- [x] `grep -nE '#[0-9a-fA-F]{3,8}|rgba?\(' lib/games/frogger/engine.ts` finds no color literal outside comments.
+- [x] `setSkin` exists and a paused game repaints right away with the new palette.
+- [x] The SKIN button shows on `/player/frogger` and cycles neon, classic, retro.
+- [x] Neon looks identical to today (compare screenshots).
+- [x] Retro draws scanlines last; retro uses only the 4 tones; classic and retro have no `shadowBlur` above 0.
+- [x] Hops, river carry, hazards, goals and the time bar are unchanged in every skin.
+- [x] `npm run lint` and `npm run build` pass.
 
 ## Decisions taken and discarded
 
