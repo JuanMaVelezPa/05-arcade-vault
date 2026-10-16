@@ -24,6 +24,7 @@ export const HOP_MS = 120; // jump animation
 export const BASE_TIME_MS = 15_000; // round timer at level 1
 export const MIN_TIME_MS = 8_000; // timer floor at high levels
 export const TIME_STEP_MS = 1_000; // timer lost per level
+export const BASE_SPEED = 0.6; // level 1 runs at 60 % of the lane speeds
 export const SPEED_STEP = 0.15; // +15 % entity speed per level
 export const TURTLE_VISIBLE_MS = 3_000;
 export const TURTLE_SUBMERGED_MS = 1_500;

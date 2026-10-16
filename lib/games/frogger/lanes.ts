@@ -2,6 +2,7 @@
 // their spacing and wrap from one edge to the other (see the engine's update).
 
 import {
+  BASE_SPEED,
   COLS,
   SPEED_STEP,
   TURTLE_SUBMERGED_MS,
@@ -146,7 +147,7 @@ const RIVER: readonly LaneSpec[] = [
 ];
 
 export function speedFactor(level: number): number {
-  return 1 + SPEED_STEP * (level - 1);
+  return BASE_SPEED * (1 + SPEED_STEP * (level - 1));
 }
 
 function buildLane(spec: LaneSpec, level: number): Lane {
