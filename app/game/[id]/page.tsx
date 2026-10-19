@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
 import { getGame, getTopScores } from "@/lib/catalog";
 import { formatPlays } from "@/lib/format";
 
@@ -7,7 +8,11 @@ export default async function GameDetailPage({
   params,
 }: PageProps<"/game/[id]">) {
   const { id } = await params;
-  const [game, scores] = await Promise.all([getGame(id), getTopScores(id, 10)]);
+  const [game, scores, user] = await Promise.all([
+    getGame(id),
+    getTopScores(id, 10),
+    getCurrentUser(),
+  ]);
   if (!game) notFound();
 
   return (
@@ -96,6 +101,24 @@ export default async function GameDetailPage({
               <div className="sc">{r.score.toLocaleString("en-US")}</div>
             </div>
           ))}
+          {!user && (
+            <div className="lb-gate">
+              <div className="lb-gate-msg pixel">
+                SIGN IN TO APPEAR ON THE RANKING
+              </div>
+              <div className="lb-gate-actions">
+                <Link href={`/login?next=/game/${game.id}`} className="btn">
+                  LOGIN
+                </Link>
+                <Link
+                  href={`/signup?next=/game/${game.id}`}
+                  className="btn yellow"
+                >
+                  SIGN UP
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
     </div>

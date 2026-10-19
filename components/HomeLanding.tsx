@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import type { CurrentUser } from "@/lib/auth";
 import type { Game } from "@/lib/types";
 
 function useReveal() {
@@ -263,7 +264,13 @@ const TOP_PLAYERS = [
   { r: 5, p: "GLITCHA", s: 138900 },
 ];
 
-export default function HomeLanding({ games }: { games: Game[] }) {
+export default function HomeLanding({
+  games,
+  user,
+}: {
+  games: Game[];
+  user: CurrentUser | null;
+}) {
   useReveal();
   const router = useRouter();
 
@@ -293,12 +300,14 @@ export default function HomeLanding({ games }: { games: Game[] }) {
             >
               ▶ EXPLORE GAMES
             </button>
-            <button
-              className="btn xl magenta"
-              onClick={() => router.push("/games")}
-            >
-              ✦ CREATE ACCOUNT
-            </button>
+            {!user && (
+              <button
+                className="btn xl magenta"
+                onClick={() => router.push("/signup")}
+              >
+                ✦ CREATE ACCOUNT
+              </button>
+            )}
           </div>
           <div className="hero-scroll" aria-hidden="true">
             <span>SCROLL</span>
@@ -467,9 +476,9 @@ export default function HomeLanding({ games }: { games: Game[] }) {
             <button
               className="btn xl pulse"
               style={{ width: "100%" }}
-              onClick={() => router.push("/games")}
+              onClick={() => router.push(user ? "/games" : "/signup")}
             >
-              START FREE →
+              {user ? "PLAY NOW →" : "START FREE →"}
             </button>
             <div className="pc-foot">
               We don&apos;t ask for a card. We never will.
@@ -493,8 +502,8 @@ export default function HomeLanding({ games }: { games: Game[] }) {
             <div className="faq-item">
               <div className="faq-q pixel">DO I NEED TO CREATE AN ACCOUNT?</div>
               <div className="faq-a">
-                No. You can play as a guest. If you want to save your score and
-                appear on the ranking, sign up in 10 seconds.
+                You can play as a guest, but you need a free account to save
+                your score and appear on the ranking. Sign up takes 10 seconds.
               </div>
             </div>
             <div className="faq-item">
