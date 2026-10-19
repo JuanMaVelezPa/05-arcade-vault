@@ -10,7 +10,7 @@ Built so far (see `specs/`): home landing, games browser, game detail with leade
 
 `references/implemented-games.md` lists the published games (id, title, category, short description, color). Keep it in sync with the `games` table when a game is added or removed.
 
-Agent logs live in `references/`: `game-suggestions-todo.md` (planner), `game-skins.md` (skins), `game-mobile.md` (mobile), `game-performance.md` (FPS). `references/gamepad-assets/` and `references/source-assets/` hold art sources.
+Agent logs live in `references/`: `game-suggestions-todo.md` (planner), `game-skins.md` (skins), `game-mobile.md` (mobile), `game-performance.md` (FPS), `security/security-audit.md` (security). `references/gamepad-assets/` and `references/source-assets/` hold art sources.
 
 The original design prototype lives in `references/templates/` (static HTML/JSX + `styles.css`). Treat it as the visual/behavior reference, not code to reuse. `references/started-games/` holds standalone reference games to port into the app (see the `add-arcade-game` skill).
 
@@ -56,6 +56,7 @@ Each agent file holds the full process; read it for details.
 - `@skin-designer` — audits every game for the three skins and drafts a spec for any gap; logs in `references/game-skins.md`. See `.claude/agents/skin-designer.md`.
 - `@mobile-porter` — checks a game on mobile (portrait, landscape) and desktop against spec 15; logs in `references/game-mobile.md`. Needs the dev server. See `.claude/agents/mobile-porter.md`.
 - `@game-optimizer <game-id>` — measures FPS on a production build and fixes only the costs the numbers support; logs in `references/game-performance.md`, never commits. See `.claude/agents/game-optimizer.md`.
+- `@security-auditor` — audits app and database security against specs 22-24 (read-only SQL, no fixes); logs in `references/security/security-audit.md` and drafts a spec for High/Medium gaps. See `.claude/agents/security-auditor.md`.
 - `@game-jam` — writes one spec draft for a game idea; normally spawned in pairs by `/game-jam`. See `.claude/agents/game-jam.md`.
 
 ## Styles

@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const CONTROL_CHARS = /\p{Cc}/u;
+const MAX_NAME = 100;
+const MAX_EMAIL = 254;
+const MAX_MESSAGE = 5000;
 
 type ContactBody = {
   name?: unknown;
@@ -28,6 +32,24 @@ export async function POST(request: Request) {
   if (!name || !email || !message) {
     return NextResponse.json(
       { error: "Name, email, and message are required." },
+      { status: 400 },
+    );
+  }
+
+  if (
+    name.length > MAX_NAME ||
+    email.length > MAX_EMAIL ||
+    message.length > MAX_MESSAGE
+  ) {
+    return NextResponse.json(
+      { error: "Name, email, or message is too long." },
+      { status: 400 },
+    );
+  }
+
+  if (CONTROL_CHARS.test(name) || CONTROL_CHARS.test(email)) {
+    return NextResponse.json(
+      { error: "Name and email contain invalid characters." },
       { status: 400 },
     );
   }
