@@ -20,13 +20,14 @@ import type { Game } from "@/lib/types";
 
 interface GamePlayerProps {
   game: Game;
+  username?: string | null; // from getCurrentUser(); null/undefined = signed out
 }
 
 const SKIN_ORDER: readonly Skin[] = ["neon", "classic", "retro"];
 const nextSkin = (s: Skin): Skin =>
   SKIN_ORDER[(SKIN_ORDER.indexOf(s) + 1) % SKIN_ORDER.length];
 
-export default function GamePlayer({ game }: GamePlayerProps) {
+export default function GamePlayer({ game, username }: GamePlayerProps) {
   const router = useRouter();
   // Real canvas games come from the registry; every other id keeps the simulated arena.
   const entry: GameEntry | undefined = Object.hasOwn(GAME_REGISTRY, game.id)
@@ -43,7 +44,6 @@ export default function GamePlayer({ game }: GamePlayerProps) {
   const [level, setLevel] = useState(1);
   const [paused, setPaused] = useState(false);
   const [over, setOver] = useState(false);
-  const [name, setName] = useState("GUEST");
   const [saved, setSaved] = useState(false);
   const [saving, startSaving] = useTransition();
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -110,11 +110,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
   const save = () =>
     startSaving(async () => {
       try {
-        const result = await submitScore({
-          gameId: game.id,
-          playerName: name,
-          score,
-        });
+        const result = await submitScore({ gameId: game.id, score });
         if (result.ok) {
           setSaveError(null);
           setSaved(true);
@@ -146,7 +142,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
           <div className="hud-stat">
             <div className="l">Player</div>
             <div className="v" style={{ color: "var(--ink)" }}>
-              {name}
+              {username ?? "GUEST"}
             </div>
           </div>
           <div className="hud-stat">
@@ -302,35 +298,45 @@ export default function GamePlayer({ game }: GamePlayerProps) {
             <h2>GAME OVER</h2>
             <div className="final-label">FINAL SCORE</div>
             <div className="final">{score.toLocaleString("en-US")}</div>
-            {!saved ? (
-              <>
-                <div className="input-row">
-                  <input
-                    value={name}
-                    onChange={(e) =>
-                      setName(e.target.value.toUpperCase().slice(0, 10))
-                    }
-                    placeholder="YOUR INITIALS"
-                    aria-label="Your initials"
-                    aria-describedby={saveError ? "save-error" : undefined}
-                  />
-                  <button
-                    type="button"
-                    className="btn yellow"
-                    onClick={save}
-                    disabled={saving}
-                  >
-                    {saving ? "SAVING…" : saveError ? "RETRY" : "SAVE SCORE"}
-                  </button>
-                </div>
-                {saveError && (
-                  <div id="save-error" className="save-error" role="alert">
-                    {saveError}
+            {username &&
+              (!saved ? (
+                <>
+                  <div className="final-label">SAVING AS {username}</div>
+                  <div className="input-row">
+                    <button
+                      type="button"
+                      className="btn yellow"
+                      onClick={save}
+                      disabled={saving}
+                      aria-describedby={saveError ? "save-error" : undefined}
+                    >
+                      {saving ? "SAVING…" : saveError ? "RETRY" : "SAVE SCORE"}
+                    </button>
                   </div>
-                )}
+                  {saveError && (
+                    <div id="save-error" className="save-error" role="alert">
+                      {saveError}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="toast-saved">▸ SCORE SAVED_</div>
+              ))}
+            {!username && (
+              <>
+                <div className="save-gate">SIGN IN TO SAVE YOUR SCORE</div>
+                <div className="gate-row">
+                  <Link href={`/login?next=/player/${game.id}`} className="btn">
+                    LOGIN
+                  </Link>
+                  <Link
+                    href={`/signup?next=/player/${game.id}`}
+                    className="btn yellow"
+                  >
+                    SIGN UP
+                  </Link>
+                </div>
               </>
-            ) : (
-              <div className="toast-saved">▸ SCORE SAVED_</div>
             )}
             <div className="actions">
               <button type="button" className="btn" onClick={restart}>

@@ -3066,6 +3066,84 @@ body:has(.crt-screen) .av-bg::before {
   text-shadow: 0 0 6px rgba(255, 0, 110, 0.45);
 }
 
+/* sign-in hint under TOP SCORES for signed-out visitors (spec 23) */
+.lb-gate {
+  margin-top: 14px;
+  padding: 16px 16px 18px;
+  border-top: 1px dashed var(--line);
+  text-align: center;
+}
+.lb-gate-msg {
+  font-size: 9px;
+  line-height: 1.8;
+  letter-spacing: 0.08em;
+  color: var(--yellow);
+  text-shadow: 0 0 8px rgba(245, 255, 0, 0.45);
+}
+.lb-gate-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.lb-gate-actions .btn {
+  flex: 1;
+  min-height: 44px;
+  justify-content: center;
+  text-align: center;
+  padding-inline: 8px;
+  white-space: nowrap;
+}
+
+/* GAME OVER sign-in prompt for signed-out players (spec 23) */
+.save-gate {
+  margin: 22px 0 0;
+  font-family: var(--pixel);
+  font-size: 10px;
+  line-height: 1.7;
+  letter-spacing: 0.08em;
+  color: var(--yellow);
+  text-shadow: 0 0 8px rgba(245, 255, 0, 0.45);
+}
+.modal .gate-row {
+  display: flex;
+  gap: 8px;
+  margin: 14px 0 12px;
+}
+.modal .gate-row .btn {
+  flex: 1;
+  min-height: 44px;
+  justify-content: center;
+  text-align: center;
+}
+
+.modal .input-row .btn {
+  flex: 1;
+  min-height: 44px;
+}
+/* narrow portrait: one column of equal full-width buttons, scroll if the
+   screen is too short for the whole modal */
+@media (max-width: 520px) {
+  .modal {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+  .modal .actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .modal .gate-row .btn {
+    padding-inline: 8px;
+    white-space: nowrap;
+  }
+  .modal .actions .btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
 /* pause overlay level selector (games with GameEntry.levels) */
 .level-jump {
   margin-top: clamp(16px, 4vw, 28px);
@@ -3797,6 +3875,13 @@ body:has(.touchpad) .av-footer {
   }
   .av-player:has(.touchpad) .modal .input-row {
     margin: 10px 0 6px;
+  }
+  .av-player:has(.touchpad) .modal .save-gate {
+    margin-top: 8px;
+    font-size: 9px;
+  }
+  .av-player:has(.touchpad) .modal .gate-row {
+    margin: 8px 0 6px;
   }
   .av-player:has(.touchpad) .modal .actions {
     margin-top: 8px;
