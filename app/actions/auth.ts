@@ -19,7 +19,7 @@ const MAX_PASSWORD = 72; // bcrypt limit
 
 const GENERIC_ERROR = "SOMETHING WENT WRONG — TRY AGAIN";
 const INVALID_EMAIL = "ENTER A VALID EMAIL";
-const INVALID_PASSWORD = `PASSWORD MUST BE ${MIN_PASSWORD}-${MAX_PASSWORD} CHARACTERS`;
+const INVALID_PASSWORD = `PASSWORD NEEDS ${MIN_PASSWORD}-${MAX_PASSWORD} CHARACTERS WITH UPPERCASE, LOWERCASE, A DIGIT AND A SYMBOL`;
 
 // Server Actions are reachable by direct POST, so don't trust the declared types
 function cleanEmail(value: unknown): string | null {
@@ -32,7 +32,11 @@ function validPassword(value: unknown): value is string {
   return (
     typeof value === "string" &&
     value.length >= MIN_PASSWORD &&
-    value.length <= MAX_PASSWORD
+    value.length <= MAX_PASSWORD &&
+    /[a-z]/.test(value) &&
+    /[A-Z]/.test(value) &&
+    /[0-9]/.test(value) &&
+    /[^A-Za-z0-9]/.test(value)
   );
 }
 

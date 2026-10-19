@@ -227,7 +227,10 @@ export default function AuthForm({
                   Forgot password?
                 </Link>
               ) : (
-                <span className="field-hint">8 to 72 characters.</span>
+                <span className="field-hint">
+                  8 to 72 characters with uppercase, lowercase, a digit and a
+                  symbol.
+                </span>
               )}
             </div>
           )}
