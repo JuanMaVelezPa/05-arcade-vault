@@ -114,3 +114,113 @@ Result: **no neon-specific cost.** Neon is equal to or better than the other two
 Caveat: this sandbox has no real GPU and no real phone, and the display is 60 Hz. If neon still feels slower on a real device, record the device and the symptom (FPS, input lag or glow) and open a new spec.
 
 The temporary `draw()` timer was removed from the engine after this run.
+
+## Snake (spec 20)
+
+Production build (`npm run build` + `npm run start -p 3100`), same profiles and sampler as above. Temporary `TEMP-PERF-COUNTER` (`GamePlayer`) and `TEMP-PERF-DRAW` (snake engine) were used and removed. Shared fixes from spec 19 verified still in place (grid paused on the player route, no `mix-blend-mode` in `app/globals.css`).
+
+Run note: an idle snake hits the wall after about 4 s and loses all lives in about 12 s, so each run steers with a synthetic arrow-key press every 700 ms (a 5-cell loop, no gameplay input otherwise). Every run was verified still in play at the end (no GAME OVER). Skin set through `localStorage` and confirmed by the button label.
+
+### Baseline
+
+| Game  | Profile | Variant         | Avg FPS | Worst frame (ms) | Frames > 50 ms | GamePlayer renders / 10 s |
+| ----- | ------- | --------------- | ------- | ---------------- | -------------- | ------------------------- |
+| snake | desktop | baseline (neon) | 60.0    | 16.8             | 0              | 0                         |
+| snake | desktop | baseline (classic) | 60.0 | 16.8             | 0              | 0                         |
+| snake | desktop | baseline (retro) | 60.0   | 16.8             | 0              | 0                         |
+| snake | mobile (4x) | baseline (neon) | 60.1 | 16.8             | 0              | 0                         |
+| snake | mobile (4x) | baseline (classic) | 60.0 | 16.8          | 0              | 0                         |
+| snake | mobile (4x) | baseline (retro) | 60.0 | 16.8            | 0              | 0                         |
+
+No CSS variants were run: the shared fixes are present and the target is met. The first attempt hit a stale server on port 3100 (old build without the instrumentation) and was discarded.
+
+### Decision
+
+Target met on both profiles in all skins, so no code change.
+
+| Area                                   | Evidence                                                         | Decision   |
+| -------------------------------------- | ---------------------------------------------------------------- | ---------- |
+| `draw()` while paused or game over     | `draw()` median 0.2-0.8 ms, 60 FPS, no gain possible            | Not needed |
+| `shadowBlur` on snake body and head    | Neon `draw()` 0.6 ms vs 0.2-0.3 ms flat skins; FPS unchanged     | Not needed |
+| Static field                           | Already cached offscreen (`fieldLayer`)                          | Not needed |
+| Per-frame allocation (`[head, ...body]`) | Inside the 0.2-0.8 ms `draw()`                                 | Not needed |
+| 120/144 Hz frame cap                   | Cannot be measured on a 60 Hz sandbox                            | Not measured |
+| React re-renders                       | 0 `GamePlayer` renders / 10 s (HUD only changes when a fruit is eaten) | Not needed |
+| Page CSS                               | Shared fixes present; 60 FPS on both profiles                    | Not needed |
+
+### After
+
+No code changed, so After equals Baseline (same build).
+
+### Skin parity
+
+One run of 10 s per skin at 390x844 with 6x CPU throttling (not the 3-run median, because the baseline already met the target).
+
+| Skin    | Profile    | Avg FPS | Worst frame (ms) | Frames > 50 ms | draw() median (ms) |
+| ------- | ---------- | ------- | ---------------- | -------------- | ------------------ |
+| neon    | mobile 6x  | 59.6    | 50.0             | 0              | 0.6                |
+| classic | mobile 6x  | 60.2    | 16.8             | 0              | 0.2                |
+| retro   | mobile 6x  | 60.1    | 16.8             | 0              | 0.4                |
+
+Neon is within 1 FPS of the best skin. Its `draw()` is about 0.4 ms higher, which is the glow (`shadowBlur`) that defines the look; no FPS or frame-time gain is available, so it was left as is. Revisit only if a real device shows it.
+
+Caveat: Linux Chromium through WSLg with no real GPU, a 60 Hz display, and CPU throttling as a proxy for a phone. Input lag and 120/144 Hz behavior were not measured.
+
+## Asteroids (spec 21)
+
+Production build (`npm run build` + `npm run start -p 3100`), same profiles and sampler as above. Temporary `TEMP-PERF-COUNTER` (`GamePlayer`) and `TEMP-PERF-DRAW` (asteroids engine) were used and removed. Shared fixes from spec 19 verified still in place (grid animation paused on the player route, no `mix-blend-mode` in `app/globals.css`). Skin set through `localStorage` and confirmed by the button label.
+
+Run note: the idle ship survived every 10 s sample (invincible for the first 3 s, then it kept at least 2 lives), so no synthetic key presses were needed. Every run was verified not GAME OVER at the end. A stale server was killed before the first build.
+
+### Baseline
+
+| Game      | Profile     | Variant            | Avg FPS | Worst frame (ms) | Frames > 50 ms | GamePlayer renders / 10 s |
+| --------- | ----------- | ------------------ | ------- | ---------------- | -------------- | ------------------------- |
+| asteroids | desktop     | baseline (neon)    | 60.0    | 16.8             | 0              | 0                         |
+| asteroids | desktop     | baseline (classic) | 59.4    | 133.4            | 1              | 1                         |
+| asteroids | desktop     | baseline (retro)   | 60.1    | 16.8             | 0              | 0                         |
+| asteroids | mobile (4x) | baseline (neon)    | 60.0    | 16.8             | 0              | 0                         |
+| asteroids | mobile (4x) | baseline (classic) | 60.0    | 16.8             | 0              | 0                         |
+| asteroids | mobile (4x) | baseline (retro)   | 60.0    | 33.5             | 0              | 1                         |
+
+The one 133 ms frame (classic, desktop) did not repeat in 4 more classic desktop runs (60.0, 60.0, 60.0, 59.9 FPS, 0 frames > 50 ms; worst `draw()` 0.6 ms), so it is treated as a one-off sandbox hitch. No CSS variants were run: the shared fixes are present and the target is met. Renders only happen when a life is lost (1 per HUD change).
+
+### Decision
+
+Target met on both profiles in all skins, so no code change was kept.
+
+| Area                                          | Evidence                                                                                              | Decision     |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------ |
+| `shadowBlur` on asteroids, bullets, ship, etc. | `draw()` median 0.1-0.2 ms in every skin; 60 FPS neon at 1x and 4x                                    | Not needed   |
+| Batching glow strokes (tried, reverted)       | Asteroids and bullets in one path per color, mobile 6x neon: 46.0, 49.6, 49.3 FPS vs 53.0-56.8 before | Reverted     |
+| `draw()` while paused or game over            | Draw cost 0.1-0.2 ms, no gain possible                                                                | Not needed   |
+| Static background                             | Single cached radial gradient, one `fillRect`                                                         | Not needed   |
+| Off-screen culling                            | Every entity wraps and stays on screen                                                                | Not applicable |
+| 120/144 Hz frame cap                          | Cannot be measured on a 60 Hz sandbox                                                                 | Not measured |
+| React re-renders                              | 0-1 `GamePlayer` renders / 10 s (HUD changes only on score, life, level; 3X timer only with power-up) | Not needed   |
+| Page CSS                                      | Shared fixes present; 60 FPS on both profiles                                                         | Not needed   |
+
+The batching experiment is the evidence that `shadowBlur` cost follows the bounds of the shadowed path: one path spanning the whole playfield blurs a much larger area than many small paths, so it was slower and was reverted.
+
+### After
+
+No code changed, so After equals Baseline (same engine and same shared code).
+
+### Skin parity
+
+Median of 3 runs of 10 s each, game idle. `draw()` is the JS time inside `draw()` only; shadow raster cost is outside it.
+
+| Skin    | Profile   | Avg FPS (runs)            | Worst frame (ms) | Frames > 50 ms (runs) | draw() median (ms) |
+| ------- | --------- | ------------------------- | ---------------- | --------------------- | ------------------ |
+| neon    | desktop   | 60.0 (60.0, 60.1, 59.9)   | 33.4             | 0, 0, 0               | 0.1                |
+| classic | desktop   | 60.0 (60.0, 60.0, 60.0)   | 16.8             | 0, 0, 0               | 0.1                |
+| retro   | desktop   | 60.0 (60.0, 60.0, 60.0)   | 16.8             | 0, 0, 0               | 0.2                |
+| neon    | mobile 6x | 54.9 (53.0, 54.9, 56.8)   | 66.7             | 2, 0, 1               | 0.1                |
+| classic | mobile 6x | 60.0 (59.7, 60.1, 60.0)   | 33.4             | 0, 0, 0               | 0.1                |
+| retro   | mobile 6x | 59.3 (59.9, 59.3, 55.8)   | 66.8             | 0, 0, 1               | 0.1                |
+| neon    | mobile 6x (repeat) | 59.1 (58.3, 59.1, 59.2) | 33.5      | 0, 0, 0               | n/a                |
+| classic | mobile 6x (repeat) | 59.6 (59.6, 58.0, 59.9) | 33.5      | 0, 0, 0               | n/a                |
+
+Neon is 5 FPS under classic in the first 6x set but equal within noise in the repeat (59.1 vs 59.6), and retro (no glow of its own besides scanlines) also dipped once, so the gap is sandbox noise rather than a skin-specific cost. `draw()` is equal across skins. No skin-specific cost found; the only candidate (glow batching) made neon slower and was reverted. Revisit only if a real device shows neon below the other skins.
+
+Caveat: Linux Chromium through WSLg with no real GPU, a 60 Hz display, and CPU throttling as a proxy for a phone. Input lag and 120/144 Hz behavior were not measured.
