@@ -10,15 +10,13 @@ export async function GET() {
     const { error } = await supabase.storage.listBuckets();
 
     if (error) {
-      return NextResponse.json(
-        { ok: false, error: error.message },
-        { status: 500 },
-      );
+      console.error("Supabase health check failed:", error.message);
+      return NextResponse.json({ ok: false }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    console.error("Supabase health check threw:", err);
+    return NextResponse.json({ ok: false }, { status: 500 });
   }
 }

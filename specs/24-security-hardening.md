@@ -1,6 +1,6 @@
 # 24 — Security hardening from the security checklist
 
-**State:** Approved
+**State:** Implemented
 **Depends on:** 06-games-and-scores-tables, 22-auth-sign-in-sign-up, 23-require-sign-in-for-scores
 **Date:** 2026-10-19
 
