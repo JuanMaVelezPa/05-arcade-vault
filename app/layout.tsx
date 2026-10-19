@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Nav from "@/components/Nav";
+import { getCurrentUser } from "@/lib/auth";
 import "./globals.css";
 
 // Self-hosted from public/fonts (no network access needed at build time).
@@ -55,7 +56,8 @@ export const metadata: Metadata = {
   description: "Online arcade platform for retro games and score leaderboards",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const user = await getCurrentUser();
   return (
     <html
       lang="en"
@@ -65,7 +67,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div className="av-bg" aria-hidden="true" />
         <div className="av-noise" aria-hidden="true" />
         <div className="av-app">
-          <Nav />
+          <Nav user={user} />
           {children}
           <footer
             className="av-footer"
