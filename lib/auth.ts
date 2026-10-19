@@ -10,21 +10,7 @@ export interface CurrentUser {
   username: string; // profiles.username
 }
 
-const DEFAULT_NEXT = "/games";
-
-// Only same-origin relative paths are allowed; anything else is an open redirect
-export function safeNext(next: string | null | undefined): string {
-  if (
-    typeof next !== "string" ||
-    !next.startsWith("/") ||
-    next.startsWith("//") ||
-    next.includes("\\") ||
-    /[\u0000-\u001f]/.test(next)
-  ) {
-    return DEFAULT_NEXT;
-  }
-  return next;
-}
+export { safeNext } from "./safe-next";
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   // The layout calls this on every page, so a Supabase outage or missing env
