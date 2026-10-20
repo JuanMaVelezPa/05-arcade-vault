@@ -1,6 +1,7 @@
 import "server-only";
 
 import { unstable_rethrow } from "next/navigation";
+import { cache } from "react";
 
 import { getSupabase } from "./supabase/server";
 
@@ -12,7 +13,8 @@ export interface CurrentUser {
 
 export { safeNext } from "./safe-next";
 
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+// cache() shares one lookup between the layout and the page within a render
+export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   // The layout calls this on every page, so a Supabase outage or missing env
   // must read as "signed out" instead of taking the whole site down
   try {
@@ -39,4 +41,4 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     console.error("getCurrentUser failed", err);
     return null;
   }
-}
+});

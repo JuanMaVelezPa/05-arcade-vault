@@ -9,6 +9,8 @@ export type SubmitScoreResult = { ok: true } | { ok: false; error: string };
 
 // Same rule as the scores table CHECK constraint; the DB enforces it again
 const MAX_SCORE = 10_000_000;
+// Game ids are short slugs; the foreign key still rejects unknown ids
+const MAX_GAME_ID = 64;
 
 export async function submitScore(input: {
   gameId: string;
@@ -22,8 +24,12 @@ export async function submitScore(input: {
   if (!Number.isInteger(score) || score < 0 || score > MAX_SCORE) {
     return { ok: false, error: "INVALID SCORE" };
   }
-  if (typeof gameId !== "string") {
-    return { ok: false, error: "SAVE FAILED — TRY AGAIN" };
+  if (
+    typeof gameId !== "string" ||
+    gameId.length === 0 ||
+    gameId.length > MAX_GAME_ID
+  ) {
+    return { ok: false, error: "INVALID GAME" };
   }
 
   try {
