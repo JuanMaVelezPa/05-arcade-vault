@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import { formatScoreDate } from "./format";
 import type { Database } from "./supabase/database.types";
 import { getSupabase } from "./supabase/server";
@@ -41,7 +43,8 @@ export async function getGames(): Promise<Game[]> {
   return games.data.map((row) => toGame(row, statsById.get(row.id)));
 }
 
-export async function getGame(id: string): Promise<Game | null> {
+// cache() lets generateMetadata and the page share one query per render
+export const getGame = cache(async (id: string): Promise<Game | null> => {
   const supabase = await getSupabase();
   const [game, stats] = await Promise.all([
     supabase
@@ -57,7 +60,7 @@ export async function getGame(id: string): Promise<Game | null> {
     throw new Error(`game_stats query failed: ${stats.error.message}`);
 
   return game.data ? toGame(game.data, stats.data ?? undefined) : null;
-}
+});
 
 export async function getTopScores(
   gameId: string,

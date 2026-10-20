@@ -3012,6 +3012,36 @@ body:has(.crt-screen) .av-bg::before {
   outline-offset: 3px;
 }
 
+/* ===== route loading UI (spec 26) ===== */
+.av-loading {
+  padding: 96px 16px;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  animation: av-loading-pulse 1s steps(2, end) infinite;
+}
+@keyframes av-loading-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .av-loading {
+    animation: none;
+  }
+}
+
+/* ===== footer (spec 26) ===== */
+.av-footer {
+  border-top: 1px solid var(--line);
+  padding: 20px 32px;
+  text-align: center;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+}
+
 /* ===== real leaderboards (spec 06): empty boards + ALL GAMES champions table ===== */
 .lb-empty {
   padding: 28px 16px;

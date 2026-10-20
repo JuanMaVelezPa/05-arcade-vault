@@ -1,8 +1,18 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getGame, getTopScores } from "@/lib/catalog";
 import { formatPlays } from "@/lib/format";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/game/[id]">): Promise<Metadata> {
+  const { id } = await params;
+  const game = await getGame(id);
+  if (!game) return { title: "Game not found · Arcade Vault" };
+  return { title: `${game.title} · Arcade Vault`, description: game.short };
+}
 
 export default async function GameDetailPage({
   params,
