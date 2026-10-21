@@ -10,7 +10,7 @@ Built so far (see `specs/`): home landing, games browser, game detail with leade
 
 `references/implemented-games.md` lists the published games (id, title, category, short description, color). Keep it in sync with the `games` table when a game is added or removed.
 
-Agent logs live in `references/`: `game-suggestions-todo.md` (planner), `game-skins.md` (skins), `game-mobile.md` (mobile), `game-performance.md` (FPS), `security/security-audit.md` (security). `references/gamepad-assets/` and `references/source-assets/` hold art sources.
+Agent logs live in `references/`: `game-suggestions-todo.md` (planner), `game-skins.md` (skins), `game-mobile.md` (mobile), `game-performance.md` (FPS), `security/security-audit.md` (security). `references/gamepad-assets/` and `references/source-assets/` hold art sources. `references/production-migration.md` is the runbook to rebuild Dev in a Production Supabase project (spec 27); verify with `supabase/verify-production.sql`.
 
 The original design prototype lives in `references/templates/` (static HTML/JSX + `styles.css`). Treat it as the visual/behavior reference, not code to reuse. `references/started-games/` holds standalone reference games to port into the app (see the `add-arcade-game` skill).
 
