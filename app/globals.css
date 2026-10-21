@@ -2244,6 +2244,16 @@ body:has(.crt-screen) .av-bg::before {
   max-height: 360px;
   overflow: hidden;
 }
+.ac-empty {
+  padding: 24px 18px;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+.top-list .ac-empty {
+  padding: 14px 0;
+}
 .tick-row {
   display: grid;
   grid-template-columns: 1fr auto auto auto;

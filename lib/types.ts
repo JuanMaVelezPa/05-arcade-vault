@@ -21,3 +21,18 @@ export interface Champion {
   game: Pick<Game, "id" | "title" | "color">;
   champion: Omit<ScoreRow, "rank"> | null; // null when the game has no scores
 }
+
+export interface RecentScore {
+  player: string; // scores.player_name
+  gameId: string;
+  gameTitle: string; // games.title
+  gameColor: string; // games.color: cyan | yellow | magenta | green
+  score: number;
+  createdAt: string; // ISO, scores.created_at
+}
+
+export interface TopPlayer {
+  rank: number;
+  player: string;
+  score: number; // best single score in the last 24h
+}

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { CurrentUser } from "@/lib/auth";
-import type { Game } from "@/lib/types";
+import type { Game, RecentScore, TopPlayer } from "@/lib/types";
 
 function useReveal() {
   useEffect(() => {
@@ -240,39 +240,35 @@ const FEATURES = [
   },
 ];
 
-const STATS = [
-  { n: "12+", u: "GAMES", s: "AND COUNTING" },
-  { n: "THOUSANDS", u: "OF MATCHES", s: "PLAYED EVERY DAY" },
-  { n: "GLOBAL", u: "RANKING", s: "COMPETE WITH THE WORLD" },
-];
+export type RecentScoreRow = RecentScore & { ago: string }; // ago is computed on the server
 
-const RECENT_SCORES = [
-  { p: "NEONFOX", g: "DROP", s: 184220, t: "2 min ago", c: "magenta" },
-  { p: "PX_KAI", g: "GLUTTON", s: 96400, t: "5 min ago", c: "yellow" },
-  { p: "Z3R0COOL", g: "INVADERS", s: 54190, t: "8 min ago", c: "green" },
-  { p: "VAULT_07", g: "ROCKS", s: 41200, t: "12 min ago", c: "cyan" },
-  { p: "GLITCHA", g: "BLOCK BUSTER", s: 28450, t: "18 min ago", c: "cyan" },
-  { p: "ARKADYA", g: "SERPENTINE", s: 7820, t: "24 min ago", c: "green" },
-  { p: "CYBER_LU", g: "FROG CROSSING", s: 18900, t: "31 min ago", c: "yellow" },
-];
-
-const TOP_PLAYERS = [
-  { r: 1, p: "NEONFOX", s: 312840 },
-  { r: 2, p: "PX_KAI", s: 248110 },
-  { r: 3, p: "M00NRYU", s: 196720 },
-  { r: 4, p: "VAULT_07", s: 154300 },
-  { r: 5, p: "GLITCHA", s: 138900 },
-];
+const NEON_COLORS = ["cyan", "yellow", "magenta", "green"];
 
 export default function HomeLanding({
   games,
   user,
+  recent,
+  topPlayers,
 }: {
   games: Game[];
   user: CurrentUser | null;
+  recent: RecentScoreRow[];
+  topPlayers: TopPlayer[];
 }) {
   useReveal();
   const router = useRouter();
+
+  const totalRuns = games.reduce((sum, g) => sum + g.plays, 0);
+  const topScore = topPlayers[0]?.score ?? 0;
+  const stats = [
+    { n: String(games.length), u: "GAMES", s: "AND COUNTING" },
+    {
+      n: totalRuns.toLocaleString("en-US"),
+      u: "RUNS SAVED",
+      s: "BY PLAYERS WORLDWIDE",
+    },
+    { n: "GLOBAL", u: "RANKING", s: "COMPETE WITH THE WORLD" },
+  ];
 
   return (
     <div className="home fade-in">
@@ -364,7 +360,7 @@ export default function HomeLanding({
       {/* STATS */}
       <section className="home-stats reveal">
         <div className="stats-inner">
-          {STATS.map((st, i) => (
+          {stats.map((st, i) => (
             <div
               key={i}
               className="stat-block"
@@ -391,16 +387,28 @@ export default function HomeLanding({
               <div className="ac-title pixel">▸ LATEST SCORES</div>
             </div>
             <div className="ticker">
-              {RECENT_SCORES.map((r, i) => (
+              {recent.length === 0 && (
+                <div className="ac-empty">NO SCORES YET — BE THE FIRST</div>
+              )}
+              {recent.map((r, i) => (
                 <div
                   key={i}
                   className="tick-row"
                   style={{ animationDelay: i * 60 + "ms" }}
                 >
-                  <span className={"tk-p neon-" + r.c}>{r.p}</span>
-                  <span className="tk-mid">▸ {r.g}</span>
-                  <span className="tk-s">+{r.s.toLocaleString("en-US")}</span>
-                  <span className="tk-t">{r.t}</span>
+                  <span
+                    className={
+                      "tk-p neon-" +
+                      (NEON_COLORS.includes(r.gameColor) ? r.gameColor : "cyan")
+                    }
+                  >
+                    {r.player}
+                  </span>
+                  <span className="tk-mid">▸ {r.gameTitle}</span>
+                  <span className="tk-s">
+                    +{r.score.toLocaleString("en-US")}
+                  </span>
+                  <span className="tk-t">{r.ago}</span>
                 </div>
               ))}
             </div>
@@ -419,7 +427,10 @@ export default function HomeLanding({
               </button>
             </div>
             <div className="top-list">
-              {TOP_PLAYERS.map((r, i) => (
+              {topPlayers.length === 0 && (
+                <div className="ac-empty">NO SCORES IN THE LAST 24 HOURS</div>
+              )}
+              {topPlayers.map((r, i) => (
                 <div
                   key={i}
                   className={
@@ -433,15 +444,19 @@ export default function HomeLanding({
                           : "")
                   }
                 >
-                  <span className="tp-rk">#{String(r.r).padStart(2, "0")}</span>
+                  <span className="tp-rk">
+                    #{String(r.rank).padStart(2, "0")}
+                  </span>
                   <span className="tp-bar">
                     <span
                       className="tp-fill"
-                      style={{ width: 100 - i * 16 + "%" }}
+                      style={{ width: (r.score / topScore) * 100 + "%" }}
                     ></span>
                   </span>
-                  <span className="tp-p">{r.p}</span>
-                  <span className="tp-s">{r.s.toLocaleString("en-US")}</span>
+                  <span className="tp-p">{r.player}</span>
+                  <span className="tp-s">
+                    {r.score.toLocaleString("en-US")}
+                  </span>
                 </div>
               ))}
             </div>

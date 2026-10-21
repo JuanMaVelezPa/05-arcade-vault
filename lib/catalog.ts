@@ -5,7 +5,7 @@ import { cache } from "react";
 import { formatScoreDate } from "./format";
 import type { Database } from "./supabase/database.types";
 import { getSupabase } from "./supabase/server";
-import type { Champion, Game, ScoreRow } from "./types";
+import type { Champion, Game, RecentScore, ScoreRow, TopPlayer } from "./types";
 
 type GameRow = Database["public"]["Tables"]["games"]["Row"];
 type StatsRow = Database["public"]["Views"]["game_stats"]["Row"];
@@ -115,4 +115,77 @@ export async function getChampions(): Promise<Champion[]> {
           : null,
     };
   });
+}
+
+// Published games only: rows are fetched first, then joined to games in code, so unpublished rows are dropped
+async function getPublishedGames(): Promise<
+  Map<string, { title: string; color: string }>
+> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from("games")
+    .select("id, title, color")
+    .eq("is_published", true);
+  if (error) throw new Error(`games query failed: ${error.message}`);
+  return new Map(data.map((g) => [g.id, g]));
+}
+
+// Newest scores across published games, newest first
+export async function getRecentScores(limit: number): Promise<RecentScore[]> {
+  const supabase = await getSupabase();
+  const [scores, games] = await Promise.all([
+    supabase
+      .from("scores")
+      .select("player_name, game_id, score, created_at")
+      .order("created_at", { ascending: false })
+      .limit(limit),
+    getPublishedGames(),
+  ]);
+  if (scores.error)
+    throw new Error(`scores query failed: ${scores.error.message}`);
+
+  return scores.data.flatMap((r) => {
+    const game = games.get(r.game_id);
+    if (!game) return [];
+    return {
+      player: r.player_name,
+      gameId: r.game_id,
+      gameTitle: game.title,
+      gameColor: game.color,
+      score: r.score,
+      createdAt: r.created_at,
+    };
+  });
+}
+
+const TOP_PLAYERS_WINDOW_MS = 24 * 60 * 60 * 1000;
+const TOP_PLAYERS_SCAN = 200;
+
+// Best single score per player in the last 24 hours (rolling, UTC)
+export async function getTopPlayers(limit: number): Promise<TopPlayer[]> {
+  const supabase = await getSupabase();
+  const since = new Date(Date.now() - TOP_PLAYERS_WINDOW_MS).toISOString();
+  const [scores, games] = await Promise.all([
+    supabase
+      .from("scores")
+      .select("player_name, game_id, score")
+      .gte("created_at", since)
+      .order("score", { ascending: false })
+      .order("created_at", { ascending: true })
+      .limit(TOP_PLAYERS_SCAN),
+    getPublishedGames(),
+  ]);
+  if (scores.error)
+    throw new Error(`scores query failed: ${scores.error.message}`);
+
+  // Rows arrive best-first, so the first row seen per player is their best
+  const best = new Map<string, number>();
+  for (const r of scores.data) {
+    if (!games.has(r.game_id) || best.has(r.player_name)) continue;
+    best.set(r.player_name, r.score);
+  }
+
+  return [...best]
+    .slice(0, limit)
+    .map(([player, score], i) => ({ rank: i + 1, player, score }));
 }
